@@ -56,6 +56,15 @@ HxsExpr *HxsParser_parsePrimitive(HxsParser *parser)
     case FLOAT_TOKEN:
         expr = make_float_literal(token->value.float_val);
         break;
+    case IDENTIFIER_TOKEN:
+        expr = make_identifier_literal(token->value.str_val);
+        break;
+    case SINGLE_QUOTE_STRING_TOKEN:
+        expr = make_string_literal(token->value.str_val, true);
+        break;
+    case DOUBLE_QUOTE_STRING_TOKEN:
+        expr = make_string_literal(token->value.str_val, false);
+        break;
     case TRUE_TOKEN:
         expr = make_bool_literal(true);
         break;

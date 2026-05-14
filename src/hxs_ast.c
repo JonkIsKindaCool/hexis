@@ -34,17 +34,23 @@ HxsExpr *make_float_literal(double value)
 HxsExpr *make_string_literal(char *value, bool single)
 {
     HxsExpr *expr = make_base_expr(single ? SINGLE_STRING_EXPR : DOUBLE_STRING_EXPR);
-    expr->string_p.value = value;
+    size_t len = strlen(value);
+    expr->string_p.value = malloc(len + 1);     
+    memcpy(expr->string_p.value, value, len + 1);
 
     return expr;
 }
+
 HxsExpr *make_identifier_literal(char *value)
 {
     HxsExpr *expr = make_base_expr(IDENTIFIER_EXPR);
-    expr->string_p.value = value;
+    size_t len = strlen(value);
+    expr->string_p.value = malloc(len + 1);
+    memcpy(expr->string_p.value, value, len + 1);
 
     return expr;
 }
+
 HxsExpr *make_binop(HxsExpr *left, HxsExpr *right, Binary_Kind op)
 {
     HxsExpr *expr = make_base_expr(BINARY_OP);
@@ -74,8 +80,84 @@ void free_expr(HxsExpr *expr)
     free(expr);
 }
 
-// STATMENETS
+StringBuffer *print_expr(HxsExpr *expr, int spaces)
+{
+    StringBuffer *buf = init_StringBuffer();
+#define ADD_SPACES(sp)                \
+    for (size_t i = 0; i < sp; i++)   \
+    {                                 \
+        add_char_to_buffer(buf, ' '); \
+    }
 
+    ADD_SPACES(spaces);
+    add_string_buffer(buf, "{\n");
+    switch (expr->kind)
+    {
+    case INT_EXPR:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Int Expression\n");
+        char *value = malloc(256);
+        snprintf(value, 256, "Value: %ld\n", expr->int_p.value);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
+        free(value);
+        break;
+    }
+    case FLOAT_EXPR:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Float Expression\n");
+        char *value = malloc(256);
+        snprintf(value, 256, "Value: %g\n", expr->float_p.value);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
+        free(value);
+        break;
+    }
+    case IDENTIFIER_EXPR:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Identifier Expression\n");
+        char *value = malloc(256);
+        snprintf(value, 256, "Value: %s\n", expr->string_p.value);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
+        free(value);
+        break;
+    }
+    case SINGLE_STRING_EXPR:
+    case DOUBLE_STRING_EXPR:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: String Expression\n");
+        char *value = malloc(256);
+        snprintf(value, 256, "Value: %s\n", expr->string_p.value);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
+        free(value);
+        break;
+    }
+    default:
+        break;
+    }
+
+    ADD_SPACES(spaces);
+    add_char_to_buffer(buf, '}');
+    add_char_to_buffer(buf, '\n');
+
+    return buf;
+}
+
+// STATMENETS
 HxsStmt *make_base_stmt(HXS_STMT_KIND kind)
 {
     HxsStmt *stmt = malloc(sizeof(HxsStmt));
@@ -105,10 +187,69 @@ void free_stmt(HxsStmt *stmt)
             free_stmt(stmt->body.body[i]);
         }
         free(stmt->body.body);
-        break;                 
+        break;
 
     default:
         break;
     }
     free(stmt);
+}
+
+StringBuffer *print_stmt(HxsStmt *stmt, int spaces)
+{
+    StringBuffer *buf = init_StringBuffer();
+#define ADD_SPACES(sp)                \
+    for (size_t i = 0; i < sp; i++)   \
+    {                                 \
+        add_char_to_buffer(buf, ' '); \
+    }
+
+    ADD_SPACES(spaces);
+    add_string_buffer(buf, "{\n");
+    switch (stmt->kind)
+    {
+    case BLOCK_STMT:
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: StatementBlock\n");
+        char *size = malloc(256);
+        snprintf(size, 256, "Size: %i\n", stmt->body.size);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, size);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Body:\n");
+
+        for (size_t i = 0; i < stmt->body.size; i++)
+        {
+            StringBuffer *temp = print_stmt(stmt->body.body[i], spaces + 4);
+
+            add_string_buffer(buf, temp->buf);
+
+            freeBuffer(temp);
+        }
+
+        free(size);
+        break;
+    case EXPR_STMT:
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Expression Statement\n");
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Expression:\n");
+        StringBuffer *temp = print_expr(stmt->expr.expression, spaces + 4);
+
+        add_string_buffer(buf, temp->buf);
+
+        freeBuffer(temp);
+        break;
+
+    default:
+        break;
+    }
+
+    ADD_SPACES(spaces);
+    add_char_to_buffer(buf, '}');
+    add_char_to_buffer(buf, '\n');
+
+    return buf;
 }

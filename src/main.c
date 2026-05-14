@@ -56,7 +56,11 @@ int main(int argc, char const *argv[])
     HxsParser *parser = init_parser(source);
     HxsStmt *stmt = HxsParser_parse(parser);
 
-    printf("%ld\n", stmt->body.body[0]->expr.expression->int_p.value);
+    StringBuffer* buf = print_stmt(stmt, 0);
+
+    printf("%s\n", buf->buf);
+
+    freeBuffer(buf);
 
     free_stmt(stmt);
     freeParser(parser);

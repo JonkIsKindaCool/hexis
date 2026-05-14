@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "stdint.h"
 #include "hxs_utils.h"
+#include <stdio.h>
 
 typedef struct HxsExpr HxsExpr;
 typedef struct HxsStmt HxsStmt;
@@ -73,6 +74,7 @@ HxsExpr *make_identifier_literal(char *value);
 HxsExpr *make_binop(HxsExpr *left, HxsExpr *right, Binary_Kind op);
 
 void free_expr(HxsExpr *expr);
+StringBuffer* print_expr(HxsExpr *stmt, int spaces);
 
 typedef enum
 {
@@ -106,3 +108,4 @@ struct HxsStmt
 HxsStmt *make_base_stmt(HXS_STMT_KIND kind);
 HxsStmt *make_expr_stmt(HxsExpr *value);
 void free_stmt(HxsStmt *stmt);
+StringBuffer* print_stmt(HxsStmt *stmt, int spaces);
