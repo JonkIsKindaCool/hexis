@@ -256,6 +256,19 @@ HxsStmt *make_expr_stmt(HxsExpr *value)
     return stmt;
 }
 
+HxsStmt *make_var_stmt(char* name, bool constant, HxsExpr *value, HxsType *type)
+{
+    HxsStmt *stmt = make_base_stmt(VAR_STMT);
+    stmt->var.name = malloc(sizeof(char) * strlen(name) + 1);
+    memcpy(stmt->var.name, name, sizeof(char) * strlen(name) + 1);
+    
+    stmt->var.constant = constant;
+    stmt->var.value = value;
+    stmt->var.type = type;
+
+    return stmt;
+}
+
 void free_stmt(HxsStmt *stmt)
 {
     switch (stmt->kind)

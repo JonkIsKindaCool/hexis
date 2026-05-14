@@ -138,6 +138,8 @@ struct HxsStmt
         {
             bool constant;
             HxsExpr *value;
+            char *name;
+            HxsType *type;
         } var;
         
     };
@@ -156,7 +158,7 @@ struct HxsType{
         struct {
             char *name;
             int size;
-            HxsType* generics;
+            HxsType** generics;
         } basic;
     };
     

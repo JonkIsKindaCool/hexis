@@ -10,26 +10,34 @@ HxsParser *init_parser(const char *src)
 }
 HxsStmt *HxsParser_parse(HxsParser *parser)
 {
-    HxsStmt *block = HxsParser_parseMultipleStmts(parser, EOF_TOKEN);
-
-    return block;
+    if (setjmp(parser->error_jmp) != 0)
+    {
+        fprintf(stderr, "[ParseError] %s\n", parser->error_msg);
+        return NULL;
+    }
+    return HxsParser_parseMultipleStmts(parser, EOF_TOKEN);
 }
 HxsStmt *HxsParser_parseMultipleStmts(HxsParser *parser, HxsTokenKind ender)
 {
     HxsStmt *block = make_base_stmt(BLOCK_STMT);
     block->body.body = malloc(0);
-
     int size = 0;
 
-    while (!HxsParser_maybe(parser, EOF_TOKEN))
+    while (!HxsParser_maybe(parser, ender))
     {
+        HxsToken *peek = get_token(parser->lexer, false);
+        bool is_eof = peek->kind == EOF_TOKEN;
+        freeToken(peek);
+
+        if (is_eof)
+            HxsParser_throw(parser,
+                            "Unexpected end of file, expected '%s'",
+                            token_kind_name(ender));
+
         size++;
         HxsStmt **new = realloc(block->body.body, sizeof(HxsStmt *) * size);
-
         if (!new)
-        {
-            return block;
-        }
+            HxsParser_throw(parser, "Out of memory in parseMultipleStmts");
 
         block->body.body = new;
         block->body.body[size - 1] = HxsParser_parseStatement(parser);
@@ -40,9 +48,24 @@ HxsStmt *HxsParser_parseMultipleStmts(HxsParser *parser, HxsTokenKind ender)
 }
 HxsStmt *HxsParser_parseStatement(HxsParser *parser)
 {
-    HxsExpr *expr = HxsParser_parseSpread(parser);
+    HxsToken *peek = get_token(parser->lexer, false);
+    HxsTokenKind kind = peek->kind;
+    freeToken(peek);
 
-    return make_expr_stmt(expr);
+    switch (kind)
+    {
+    case EOF_TOKEN:
+        HxsParser_throw(parser, "Unexpected end of file in statement");
+        return NULL;
+
+    default:
+    {
+        HxsExpr *expr = HxsParser_parseSpread(parser);
+        if (!expr)
+            HxsParser_throw(parser, "Empty or invalid expression in statement");
+        return make_expr_stmt(expr);
+    }
+    }
 }
 
 HxsExpr *HxsParser_parseSpread(HxsParser *parser) // .. ..=
@@ -310,8 +333,16 @@ HxsExpr *HxsParser_parsePrimitive(HxsParser *parser)
     case FALSE_TOKEN:
         expr = make_bool_literal(false);
         break;
+
     default:
-        break;
+    {
+        HxsTokenKind found = token->kind;
+        freeToken(token);
+        HxsParser_throw(parser,
+                        "Unexpected token '%s' where an expression was expected",
+                        token_kind_name(found));
+        return NULL;
+    }
     }
 
     freeToken(token);
@@ -331,6 +362,88 @@ bool HxsParser_maybe(HxsParser *parser, HxsTokenKind kind)
 
     freeToken(tok);
     return val;
+}
+
+HxsType *HxsParser_parseType(HxsParser *parser)
+{
+    HxsToken *tok = HxsParser_expect(parser, IDENTIFIER_TOKEN);
+
+    HxsType *type = malloc(sizeof(HxsType));
+    type->kind = BASIC;
+    size_t len = strlen(tok->value.str_val);
+    type->basic.name = malloc(len + 1);
+    memcpy(type->basic.name, tok->value.str_val, len + 1);
+    type->basic.size = 0;
+    type->basic.generics = NULL;
+    freeToken(tok);
+
+    if (HxsParser_maybe(parser, LESS_TOKEN))
+    {
+        type->basic.generics = malloc(0);
+
+        while (!HxsParser_maybe(parser, GREATER_TOKEN))
+        {
+            int s = ++type->basic.size;
+            HxsType **new = realloc(type->basic.generics, sizeof(HxsType *) * s);
+            if (!new)
+                HxsParser_throw(parser, "Failed generating memory.");
+
+            type->basic.generics = new;
+            type->basic.generics[s - 1] = HxsParser_parseType(parser);
+
+            if (!HxsParser_maybe(parser, COMMA_TOKEN))
+            {
+                HxsParser_expect(parser, GREATER_TOKEN);
+                break;
+            }
+        }
+    }
+
+    return type;
+}
+
+char *HxsParser_getIdent(HxsParser *parser)
+{
+    HxsToken *token = HxsParser_expect(parser, IDENTIFIER_TOKEN);
+
+    size_t len = strlen(token->value.str_val);
+    char *ident = malloc(len + 1);
+    memcpy(ident, token->value.str_val, len + 1);
+
+    freeToken(token);
+    return ident;
+}
+
+void HxsParser_throw(HxsParser *parser, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(parser->error_msg, sizeof(parser->error_msg), fmt, args);
+    va_end(args);
+
+    parser->has_error = true;
+    longjmp(parser->error_jmp, 1);
+}
+
+HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind)
+{
+    HxsToken *tok = get_token(parser->lexer, false);
+
+    if (tok->kind != kind)
+    {
+        HxsTokenKind found = tok->kind;
+        freeToken(tok);
+
+        HxsParser_throw(parser,
+                        "Se esperaba %s pero se encontró %s",
+                        token_kind_name(kind),
+                        token_kind_name(found));
+
+        return NULL;
+    }
+
+    freeToken(tok);
+    return get_token(parser->lexer, true);
 }
 
 void freeParser(HxsParser *parser)
