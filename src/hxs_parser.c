@@ -21,18 +21,8 @@ HxsStmt *HxsParser_parseMultipleStmts(HxsParser *parser, HxsTokenKind ender)
 
     int size = 0;
 
-    while (true)
+    while (!HxsParser_maybe(parser, EOF_TOKEN))
     {
-        HxsToken *token = get_token(parser->lexer, false);
-
-        if (token->kind == ender)
-        {
-            freeToken(token);
-            break;
-        }
-
-        freeToken(token);
-
         size++;
         HxsStmt **new = realloc(block->body.body, sizeof(HxsStmt *) * size);
 
@@ -63,7 +53,15 @@ HxsExpr *HxsParser_parsePrimitive(HxsParser *parser)
     case INT_TOKEN:
         expr = make_int_literal(token->value.int_val);
         break;
-
+    case FLOAT_TOKEN:
+        expr = make_float_literal(token->value.float_val);
+        break;
+    case TRUE_TOKEN:
+        expr = make_bool_literal(true);
+        break;
+    case FALSE_TOKEN:
+        expr = make_bool_literal(false);
+        break;
     default:
         break;
     }
