@@ -32,6 +32,7 @@ typedef enum
     CASE_TOKEN,
     TRY_TOKEN,
     CATCH_TOKEN,
+    CLASS_TOKEN,
 
     // Operator Tokens
     ADD_TOKEN,      // +

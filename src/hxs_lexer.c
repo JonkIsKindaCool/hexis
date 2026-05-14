@@ -75,6 +75,7 @@ static Keyword KEYWORDS[] = {
     {"case", CASE_TOKEN},
     {"try", TRY_TOKEN},
     {"catch", CATCH_TOKEN},
+    {"class", CLASS_TOKEN},
     {NULL, EOF_TOKEN},
 };
 
@@ -411,11 +412,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 
     if (!advance)
     {
-        freeToken(tok);
         lexer->pos = saved_pos;
         lexer->line = saved_line;
         lexer->linePos = saved_linePos;
-        return get_token(lexer, true);
+        return tok;
     }
 
     return tok;
