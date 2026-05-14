@@ -198,6 +198,7 @@ StringBuffer *print_expr(HxsExpr *expr, int spaces)
     }
     case BINARY_OP:
     {
+        ADD_SPACES(spaces + 2);
         add_string_buffer(buf, "Kind: Binary operator\n");
 
         const char *op = (expr->binary_op.op < sizeof(binary_op_strings) / sizeof(binary_op_strings[0]))
@@ -209,6 +210,21 @@ StringBuffer *print_expr(HxsExpr *expr, int spaces)
 
         ADD_SPACES(spaces + 2);
         add_string_buffer(buf, value);
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Left:\n");
+        StringBuffer *left = print_expr(expr->binary_op.left, spaces + 4);
+
+        add_string_buffer(buf, left->buf);
+
+        freeBuffer(left);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Right:\n");
+        StringBuffer *right = print_expr(expr->binary_op.right, spaces + 4);
+
+        add_string_buffer(buf, right->buf);
+
+        freeBuffer(right);
 
         break;
     }

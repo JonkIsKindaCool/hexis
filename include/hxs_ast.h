@@ -8,6 +8,7 @@
 
 typedef struct HxsExpr HxsExpr;
 typedef struct HxsStmt HxsStmt;
+typedef struct HxsType HxsType;
 
 typedef enum
 {
@@ -114,6 +115,7 @@ typedef enum
     FOR_STMT,
     BLOCK_STMT,
     EXPR_STMT,
+    VAR_STMT,
 } HXS_STMT_KIND;
 
 struct HxsStmt
@@ -131,7 +133,33 @@ struct HxsStmt
             HxsStmt **body;
             int size;
         } body;
+
+        struct
+        {
+            bool constant;
+            HxsExpr *value;
+        } var;
+        
     };
+};
+
+typedef enum {
+    BASIC,
+    FUNCTION,
+    ANON_OBJECT
+} HxsTypeKind;
+
+struct HxsType{
+    HxsTypeKind kind;
+    union
+    {
+        struct {
+            char *name;
+            int size;
+            HxsType* generics;
+        } basic;
+    };
+    
 };
 
 HxsStmt *make_base_stmt(HXS_STMT_KIND kind);
