@@ -28,6 +28,35 @@ typedef enum
     BOP_SUB,
     BOP_MULT,
     BOP_DIV,
+    BOP_MODULO,
+
+    BOP_EQUAL,
+    BOP_NOT_EQUAL,
+    BOP_LESS,
+    BOP_GREATER,
+    BOP_LESS_EQUAL,
+    BOP_GREATER_EQUAL,
+
+    BOP_LAND,
+    BOP_LOR,
+
+    BOP_AND,
+    BOP_OR,
+    BOP_XOR,
+
+    BOP_ASSIGN,
+    BOP_ADD_ASSIGN,
+    BOP_MINUS_ASSIGN,
+    BOP_MUL_ASSIGN,
+    BOP_DIV_ASSIGN,
+    BOP_MODULO_ASSIGN,
+
+    BOP_SPREAD,
+    BOP_SPREAD_EQUAL,
+    BOP_NULLISH,
+    BOP_NULL
+
+    
 } Binary_Kind;
 
 struct HxsExpr

@@ -1,5 +1,38 @@
 #include "hxs_ast.h"
 
+static const char *const binary_op_strings[] = {
+    [BOP_ADD] = "+",
+    [BOP_SUB] = "-",
+    [BOP_MULT] = "*",
+    [BOP_DIV] = "/",
+    [BOP_MODULO] = "%",
+
+    [BOP_EQUAL] = "==",
+    [BOP_NOT_EQUAL] = "!=",
+    [BOP_LESS] = "<",
+    [BOP_GREATER] = ">",
+    [BOP_LESS_EQUAL] = "<=",
+    [BOP_GREATER_EQUAL] = ">=",
+
+    [BOP_LAND] = "&&",
+    [BOP_LOR] = "||",
+
+    [BOP_AND] = "&",
+    [BOP_OR] = "|",
+    [BOP_XOR] = "^",
+
+    [BOP_ASSIGN] = "=",
+    [BOP_ADD_ASSIGN] = "+=",
+    [BOP_MINUS_ASSIGN] = "-=",
+    [BOP_MUL_ASSIGN] = "*=",
+    [BOP_DIV_ASSIGN] = "/=",
+    [BOP_MODULO_ASSIGN] = "%=",
+
+    [BOP_SPREAD] = "...",
+    [BOP_SPREAD_EQUAL] = "...=",
+    [BOP_NULLISH] = "??",
+    [BOP_NULL] = "?."};
+
 HxsExpr *make_base_expr(HXS_EXPR_KIND kind)
 {
     HxsExpr *expr = (HxsExpr *)malloc(sizeof(HxsExpr));
@@ -35,7 +68,7 @@ HxsExpr *make_string_literal(char *value, bool single)
 {
     HxsExpr *expr = make_base_expr(single ? SINGLE_STRING_EXPR : DOUBLE_STRING_EXPR);
     size_t len = strlen(value);
-    expr->string_p.value = malloc(len + 1);     
+    expr->string_p.value = malloc(len + 1);
     memcpy(expr->string_p.value, value, len + 1);
 
     return expr;
@@ -144,6 +177,39 @@ StringBuffer *print_expr(HxsExpr *expr, int spaces)
         add_string_buffer(buf, value);
 
         free(value);
+        break;
+    }
+    case BOOLEAN_EXPR:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Boolean Expression\n");
+        char *value = malloc(256);
+        snprintf(value, 256, "Value: %s\n", expr->bool_p.value ? "true" : "false");
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
+        free(value);
+        break;
+    }
+    case NEW_EXPR:
+    {
+        break;
+    }
+    case BINARY_OP:
+    {
+        add_string_buffer(buf, "Kind: Binary operator\n");
+
+        const char *op = (expr->binary_op.op < sizeof(binary_op_strings) / sizeof(binary_op_strings[0]))
+                             ? binary_op_strings[expr->binary_op.op]
+                             : "???";
+
+        char value[256];
+        snprintf(value, sizeof(value), "Value: %s\n", op);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, value);
+
         break;
     }
     default:
