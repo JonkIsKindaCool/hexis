@@ -119,8 +119,8 @@ const char *token_kind_name(HxsTokenKind kind)
         return "ELSE";
     case VAR_TOKEN:
         return "VAR";
-    case FINAL_TOKEN:
-        return "FINAL";
+    case CONST_TOKEN:
+        return "CONST";
     case TRUE_TOKEN:
         return "TRUE";
     case FALSE_TOKEN:

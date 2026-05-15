@@ -256,12 +256,12 @@ HxsStmt *make_expr_stmt(HxsExpr *value)
     return stmt;
 }
 
-HxsStmt *make_var_stmt(char* name, bool constant, HxsExpr *value, HxsType *type)
+HxsStmt *make_var_stmt(char *name, bool constant, HxsExpr *value, HxsType *type)
 {
     HxsStmt *stmt = make_base_stmt(VAR_STMT);
     stmt->var.name = malloc(sizeof(char) * strlen(name) + 1);
     memcpy(stmt->var.name, name, sizeof(char) * strlen(name) + 1);
-    
+
     stmt->var.constant = constant;
     stmt->var.value = value;
     stmt->var.type = type;
@@ -283,7 +283,17 @@ void free_stmt(HxsStmt *stmt)
         }
         free(stmt->body.body);
         break;
-
+    case VAR_STMT:
+        free(stmt->var.name);
+        if (stmt->var.type != NULL)
+        {
+            free_type(stmt->var.type);
+        }
+        if (stmt->var.value != NULL)
+        {
+            free_expr(stmt->var.value);
+        }
+        break;
     default:
         break;
     }
@@ -304,6 +314,7 @@ StringBuffer *print_stmt(HxsStmt *stmt, int spaces)
     switch (stmt->kind)
     {
     case BLOCK_STMT:
+    {
         ADD_SPACES(spaces + 2);
         add_string_buffer(buf, "Kind: StatementBlock\n");
         char *size = malloc(256);
@@ -326,7 +337,35 @@ StringBuffer *print_stmt(HxsStmt *stmt, int spaces)
 
         free(size);
         break;
+    }
+    case VAR_STMT:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Var Declaration Statement\n");
+        char *temp = malloc(256);
+        snprintf(temp, 256, "Name: %s\n", stmt->var.name);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        snprintf(temp, 256, "Constant: %s\n", stmt->var.constant ? "true" : "false");
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        free(temp);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Type:\n");
+
+        StringBuffer *type = print_type(stmt->var.type, spaces + 3);
+        add_string_buffer(buf, type->buf);
+
+        freeBuffer(type);
+        break;
+    }
     case EXPR_STMT:
+    {
         ADD_SPACES(spaces + 2);
         add_string_buffer(buf, "Kind: Expression Statement\n");
         ADD_SPACES(spaces + 2);
@@ -336,6 +375,62 @@ StringBuffer *print_stmt(HxsStmt *stmt, int spaces)
         add_string_buffer(buf, temp->buf);
 
         freeBuffer(temp);
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    ADD_SPACES(spaces);
+    add_char_to_buffer(buf, '}');
+    add_char_to_buffer(buf, '\n');
+
+    return buf;
+}
+
+void free_type(HxsType *type)
+{
+    switch (type->kind)
+    {
+    case TYPE_BASIC:
+        free(type->basic.name);
+        for (size_t i = 0; i < type->basic.size; i++)
+            free_type(type->basic.generics[i]);
+        free(type->basic.generics);
+        break;
+    }
+    free(type);
+}
+StringBuffer *print_type(HxsType *type, int spaces)
+{
+    StringBuffer *buf = init_StringBuffer();
+#define ADD_SPACES(sp)                \
+    for (size_t i = 0; i < sp; i++)   \
+    {                                 \
+        add_char_to_buffer(buf, ' '); \
+    }
+
+    ADD_SPACES(spaces);
+    add_string_buffer(buf, "{\n");
+
+    switch (type->kind)
+    {
+    case TYPE_BASIC:
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Basic type\n");
+        char *temp = malloc(256);
+        snprintf(temp, 256, "Name: %s\n", type->basic.name);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        snprintf(temp, 256, "Amount of generics: %ld\n", type->basic.size);
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        free(temp);
         break;
 
     default:

@@ -41,6 +41,7 @@ HxsStmt *HxsParser_parseMultipleStmts(HxsParser *parser, HxsTokenKind ender)
 
         block->body.body = new;
         block->body.body[size - 1] = HxsParser_parseStatement(parser);
+        HxsParser_maybe(parser, SEMICOLON_TOKEN);
     }
 
     block->body.size = size;
@@ -57,7 +58,35 @@ HxsStmt *HxsParser_parseStatement(HxsParser *parser)
     case EOF_TOKEN:
         HxsParser_throw(parser, "Unexpected end of file in statement");
         return NULL;
+    case VAR_TOKEN:
+    case CONST_TOKEN:
+        freeToken(get_token(parser->lexer, true));
+        bool constant = kind == CONST_TOKEN;
+        char *name = HxsParser_getIdent(parser);
+        HxsType *type = NULL;
+        HxsExpr *value = NULL;
 
+        if (HxsParser_maybe(parser, COLON_TOKEN))
+        {
+            type = HxsParser_parseType(parser);
+        }
+
+        if (constant)
+        {
+            freeToken(HxsParser_expect(parser, ASSIGN_TOKEN));
+            value = HxsParser_parseSpread(parser);
+        }
+        else
+        {
+            if (HxsParser_maybe(parser, ASSIGN_TOKEN))
+            {
+                value = HxsParser_parseSpread(parser);
+            }
+        }
+    
+        HxsStmt* result = make_var_stmt(name, constant, value, type);
+        free(name);
+        return result;
     default:
     {
         HxsExpr *expr = HxsParser_parseSpread(parser);
@@ -369,7 +398,7 @@ HxsType *HxsParser_parseType(HxsParser *parser)
     HxsToken *tok = HxsParser_expect(parser, IDENTIFIER_TOKEN);
 
     HxsType *type = malloc(sizeof(HxsType));
-    type->kind = BASIC;
+    type->kind = TYPE_BASIC;
     size_t len = strlen(tok->value.str_val);
     type->basic.name = malloc(len + 1);
     memcpy(type->basic.name, tok->value.str_val, len + 1);
@@ -393,7 +422,7 @@ HxsType *HxsParser_parseType(HxsParser *parser)
 
             if (!HxsParser_maybe(parser, COMMA_TOKEN))
             {
-                HxsParser_expect(parser, GREATER_TOKEN);
+                freeToken(HxsParser_expect(parser, GREATER_TOKEN));
                 break;
             }
         }
@@ -407,8 +436,8 @@ char *HxsParser_getIdent(HxsParser *parser)
     HxsToken *token = HxsParser_expect(parser, IDENTIFIER_TOKEN);
 
     size_t len = strlen(token->value.str_val);
-    char *ident = malloc(len + 1);
-    memcpy(ident, token->value.str_val, len + 1);
+    char *ident = malloc(sizeof(char) * len + 1);
+    memcpy(ident, token->value.str_val, sizeof(char) * len + 1);
 
     freeToken(token);
     return ident;

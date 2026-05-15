@@ -23,7 +23,7 @@ typedef enum
     IF_TOKEN,
     ELSE_TOKEN,
     VAR_TOKEN,
-    FINAL_TOKEN,
+    CONST_TOKEN,
     TRUE_TOKEN,
     FALSE_TOKEN,
     WHILE_TOKEN,

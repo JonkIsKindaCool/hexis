@@ -1,1 +1,1 @@
-var aea = 1;
+var aea:Int = 2;

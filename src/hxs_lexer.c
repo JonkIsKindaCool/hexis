@@ -66,7 +66,7 @@ static Keyword KEYWORDS[] = {
     {"if", IF_TOKEN},
     {"else", ELSE_TOKEN},
     {"var", VAR_TOKEN},
-    {"final", FINAL_TOKEN},
+    {"const", CONST_TOKEN},
     {"true", TRUE_TOKEN},
     {"false", FALSE_TOKEN},
     {"while", WHILE_TOKEN},

@@ -146,9 +146,9 @@ struct HxsStmt
 };
 
 typedef enum {
-    BASIC,
-    FUNCTION,
-    ANON_OBJECT
+    TYPE_BASIC,
+    TYPE_FUNCTION,
+    TYPE_ANON_OBJECT
 } HxsTypeKind;
 
 struct HxsType{
@@ -166,5 +166,9 @@ struct HxsType{
 
 HxsStmt *make_base_stmt(HXS_STMT_KIND kind);
 HxsStmt *make_expr_stmt(HxsExpr *value);
+HxsStmt *make_var_stmt(char* name, bool constant, HxsExpr *value, HxsType *type);
 void free_stmt(HxsStmt *stmt);
 StringBuffer* print_stmt(HxsStmt *stmt, int spaces);
+
+void free_type(HxsType *type);
+StringBuffer* print_type(HxsType *type, int spaces);
