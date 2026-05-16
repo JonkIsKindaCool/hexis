@@ -81,6 +81,8 @@ typedef enum
     LEFTCURLYBRACKET_TOKEN, // {
     RIGHTCURLYBRACKET_TOKEN,// }
 
+    QUESTION_TOKEN, //?
+
     EOF_TOKEN,
 
 } HxsTokenKind;

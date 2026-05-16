@@ -1,1 +1,3 @@
-var aea:Int = 2;
+function sum(a, b){
+    var print = 2;
+}

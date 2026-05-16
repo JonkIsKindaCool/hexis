@@ -269,6 +269,27 @@ HxsStmt *make_var_stmt(char *name, bool constant, HxsExpr *value, HxsType *type)
     return stmt;
 }
 
+HxsStmt *make_function_stmt(char *name, int argsLength, HxsFunctionArgument **args, HxsStmt *body)
+{
+    HxsStmt *stmt = make_base_stmt(FUNCTION_STMT);
+    if (name != NULL)
+    {
+        stmt->function.name = malloc(sizeof(char) * strlen(name) + 1);
+        memcpy(stmt->function.name, name, sizeof(char) * strlen(name) + 1);
+    }
+    else
+    {
+        stmt->function.name = NULL;
+    }
+
+    stmt->function.argsLength = argsLength;
+    stmt->function.args = args;
+
+    stmt->function.body = body;
+
+    return stmt;
+}
+
 void free_stmt(HxsStmt *stmt)
 {
     switch (stmt->kind)
@@ -294,6 +315,17 @@ void free_stmt(HxsStmt *stmt)
             free_expr(stmt->var.value);
         }
         break;
+    case FUNCTION_STMT:
+    {
+        free(stmt->function.name);
+        for (size_t i = 0; i < stmt->function.argsLength; i++)
+        {
+            freeArgument(stmt->function.args[i]);
+        }
+
+        free(stmt->function.args);
+        free_stmt(stmt->function.body);
+    }
     default:
         break;
     }
@@ -355,13 +387,64 @@ StringBuffer *print_stmt(HxsStmt *stmt, int spaces)
 
         free(temp);
 
+        if (stmt->var.type != NULL)
+        {
+            ADD_SPACES(spaces + 2);
+            add_string_buffer(buf, "Type:\n");
+
+            StringBuffer *type = print_type(stmt->var.type, spaces + 4);
+            add_string_buffer(buf, type->buf);
+
+            freeBuffer(type);
+        }
         ADD_SPACES(spaces + 2);
-        add_string_buffer(buf, "Type:\n");
+        if (stmt->var.value != NULL)
+        {
+            add_string_buffer(buf, "Value:\n");
 
-        StringBuffer *type = print_type(stmt->var.type, spaces + 3);
-        add_string_buffer(buf, type->buf);
+            StringBuffer *value = print_expr(stmt->var.value, spaces + 4);
+            add_string_buffer(buf, value->buf);
 
-        freeBuffer(type);
+            freeBuffer(value);
+        }
+        break;
+    }
+    case FUNCTION_STMT:
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Kind: Function Statement\n");
+
+        char *temp = malloc(256);
+
+        snprintf(temp, 256, "Name: %s\n", stmt->function.name ? stmt->function.name : "<anonymous>");
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        snprintf(temp, 256, "Args count: %d\n", stmt->function.argsLength);
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, temp);
+
+        free(temp);
+
+        if (stmt->function.argsLength > 0)
+        {
+            ADD_SPACES(spaces + 2);
+            add_string_buffer(buf, "Args:\n");
+
+            for (size_t i = 0; i < stmt->function.argsLength; i++)
+            {
+                StringBuffer *arg = print_argument(stmt->function.args[i], spaces + 4);
+                add_string_buffer(buf, arg->buf);
+                freeBuffer(arg);
+            }
+        }
+
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Body:\n");
+        StringBuffer *body = print_stmt(stmt->function.body, spaces + 4);
+        add_string_buffer(buf, body->buf);
+        freeBuffer(body);
+
         break;
     }
     case EXPR_STMT:
@@ -394,11 +477,21 @@ void free_type(HxsType *type)
     switch (type->kind)
     {
     case TYPE_BASIC:
+    {
         free(type->basic.name);
         for (size_t i = 0; i < type->basic.size; i++)
             free_type(type->basic.generics[i]);
         free(type->basic.generics);
         break;
+    }
+    case TYPE_ANON_OBJECT:
+    {
+        break;
+    }
+    case TYPE_FUNCTION:
+    {
+        break;
+    }
     }
     free(type);
 }
@@ -425,16 +518,94 @@ StringBuffer *print_type(HxsType *type, int spaces)
         ADD_SPACES(spaces + 2);
         add_string_buffer(buf, temp);
 
-        snprintf(temp, 256, "Amount of generics: %ld\n", type->basic.size);
+        snprintf(temp, 256, "Amount of generics: %d\n", type->basic.size);
 
         ADD_SPACES(spaces + 2);
         add_string_buffer(buf, temp);
 
         free(temp);
+
+        if (type->basic.size > 0)
+        {
+            ADD_SPACES(spaces + 2);
+            add_string_buffer(buf, "Generics:\n");
+            for (size_t i = 0; i < type->basic.size; i++)
+            {
+                StringBuffer *t = print_type(type->basic.generics[i], spaces + 4);
+                add_string_buffer(buf, t->buf);
+
+                freeBuffer(t);
+            }
+        }
         break;
 
     default:
         break;
+    }
+
+    ADD_SPACES(spaces);
+    add_char_to_buffer(buf, '}');
+    add_char_to_buffer(buf, '\n');
+
+    return buf;
+}
+
+HxsFunctionArgument *make_argument(bool optional, char *name, HxsExpr *def, HxsType *type)
+{
+    HxsFunctionArgument *arg = malloc(sizeof(HxsFunctionArgument));
+    arg->optional = optional;
+
+    arg->name = malloc(sizeof(char) * strlen(name) + 1);
+    memcpy(arg->name, name, sizeof(char) * strlen(name) + 1);
+
+    arg->def = def;
+    arg->type = type;
+
+    return arg;
+}
+
+void freeArgument(HxsFunctionArgument *arg)
+{
+    free(arg->name);
+    if (arg->type != NULL)
+    {
+        free_type(arg->type);
+    }
+    free(arg);
+}
+
+StringBuffer *print_argument(HxsFunctionArgument *arg, int spaces)
+{
+    StringBuffer *buf = init_StringBuffer();
+#define ADD_SPACES(sp)                \
+    for (size_t i = 0; i < sp; i++)   \
+    {                                 \
+        add_char_to_buffer(buf, ' '); \
+    }
+
+    ADD_SPACES(spaces);
+    add_string_buffer(buf, "{\n");
+
+    ADD_SPACES(spaces + 2);
+    add_string_buffer(buf, "Kind: Function argument\n");
+    char *temp = malloc(256);
+    snprintf(temp, 256, "Name: %s\n", arg->name);
+
+    ADD_SPACES(spaces + 2);
+    add_string_buffer(buf, temp);
+
+    snprintf(temp, 256, "Optional: %s\n", arg->optional ? "true" : "false");
+
+    ADD_SPACES(spaces + 2);
+    add_string_buffer(buf, temp);
+
+    free(temp);
+
+    if (arg->type != NULL)
+    {
+        ADD_SPACES(spaces + 2);
+        add_string_buffer(buf, "Type: ");
+        print_type(arg->type, spaces + 4);
     }
 
     ADD_SPACES(spaces);

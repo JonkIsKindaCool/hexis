@@ -60,6 +60,7 @@ HxsStmt *HxsParser_parseStatement(HxsParser *parser)
         return NULL;
     case VAR_TOKEN:
     case CONST_TOKEN:
+    {
         freeToken(get_token(parser->lexer, true));
         bool constant = kind == CONST_TOKEN;
         char *name = HxsParser_getIdent(parser);
@@ -73,7 +74,7 @@ HxsStmt *HxsParser_parseStatement(HxsParser *parser)
 
         if (constant)
         {
-            freeToken(HxsParser_expect(parser, ASSIGN_TOKEN));
+            freeToken(HxsParser_expect(parser, ASSIGN_TOKEN, "Expected a value after a constant declaration"));
             value = HxsParser_parseSpread(parser);
         }
         else
@@ -83,10 +84,76 @@ HxsStmt *HxsParser_parseStatement(HxsParser *parser)
                 value = HxsParser_parseSpread(parser);
             }
         }
-    
-        HxsStmt* result = make_var_stmt(name, constant, value, type);
+
+        HxsStmt *result = make_var_stmt(name, constant, value, type);
         free(name);
         return result;
+    }
+    case FUNCTION_TOKEN:
+    {
+        freeToken(get_token(parser->lexer, true));
+        char *name = NULL;
+
+        HxsToken *tok = get_token(parser->lexer, false);
+
+        if (tok->kind == IDENTIFIER_TOKEN)
+        {
+            freeToken(tok);
+            name = HxsParser_getIdent(parser);
+        }
+        else
+        {
+            freeToken(tok);
+        }
+        
+        int argsLength = 0;
+        HxsFunctionArgument **args = NULL;
+
+        freeToken(HxsParser_expect(parser, LEFTPAREN_TOKEN, NULL));
+
+        while (!HxsParser_maybe(parser, RIGHTPAREN_TOKEN))
+        {
+            bool optional = HxsParser_maybe(parser, QUESTION_TOKEN);
+            char *name = HxsParser_getIdent(parser);
+
+            HxsType *type = NULL;
+
+            if (HxsParser_maybe(parser, COLON_TOKEN))
+            {
+                type = HxsParser_parseType(parser);
+            }
+
+            HxsExpr *def = NULL;
+
+            if (HxsParser_maybe(parser, ASSIGN_TOKEN))
+            {
+                def = HxsParser_parseSpread(parser);
+            }
+
+            argsLength++;
+            HxsFunctionArgument **new = realloc(args, sizeof(HxsFunctionArgument *) * argsLength);
+            if (!new)
+                HxsParser_throw(parser, "Out of memory in parseMultipleStmts");
+
+            args = new;
+            args[argsLength - 1] = make_argument(optional, name, def, type);
+
+            free(name);
+
+            if (!HxsParser_maybe(parser, COMMA_TOKEN)){
+                freeToken(HxsParser_expect(parser, RIGHTPAREN_TOKEN, NULL));
+                break;
+            }
+        }
+
+        freeToken(HxsParser_expect(parser, LEFTCURLYBRACKET_TOKEN, NULL));
+        HxsStmt *body = HxsParser_parseMultipleStmts(parser, RIGHTCURLYBRACKET_TOKEN);
+
+        HxsStmt* result = make_function_stmt(name, argsLength, args, body);
+        free(name);
+
+        return result;
+    }
     default:
     {
         HxsExpr *expr = HxsParser_parseSpread(parser);
@@ -395,7 +462,7 @@ bool HxsParser_maybe(HxsParser *parser, HxsTokenKind kind)
 
 HxsType *HxsParser_parseType(HxsParser *parser)
 {
-    HxsToken *tok = HxsParser_expect(parser, IDENTIFIER_TOKEN);
+    HxsToken *tok = HxsParser_expect(parser, IDENTIFIER_TOKEN, NULL);
 
     HxsType *type = malloc(sizeof(HxsType));
     type->kind = TYPE_BASIC;
@@ -422,7 +489,7 @@ HxsType *HxsParser_parseType(HxsParser *parser)
 
             if (!HxsParser_maybe(parser, COMMA_TOKEN))
             {
-                freeToken(HxsParser_expect(parser, GREATER_TOKEN));
+                freeToken(HxsParser_expect(parser, GREATER_TOKEN, NULL));
                 break;
             }
         }
@@ -433,7 +500,7 @@ HxsType *HxsParser_parseType(HxsParser *parser)
 
 char *HxsParser_getIdent(HxsParser *parser)
 {
-    HxsToken *token = HxsParser_expect(parser, IDENTIFIER_TOKEN);
+    HxsToken *token = HxsParser_expect(parser, IDENTIFIER_TOKEN, NULL);
 
     size_t len = strlen(token->value.str_val);
     char *ident = malloc(sizeof(char) * len + 1);
@@ -454,8 +521,12 @@ void HxsParser_throw(HxsParser *parser, const char *fmt, ...)
     longjmp(parser->error_jmp, 1);
 }
 
-HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind)
+HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind, const char *err)
 {
+    if (err == NULL)
+    {
+        err = "Expected %s, found %s";
+    }
     HxsToken *tok = get_token(parser->lexer, false);
 
     if (tok->kind != kind)
@@ -464,7 +535,7 @@ HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind)
         freeToken(tok);
 
         HxsParser_throw(parser,
-                        "Se esperaba %s pero se encontró %s",
+                        err,
                         token_kind_name(kind),
                         token_kind_name(found));
 

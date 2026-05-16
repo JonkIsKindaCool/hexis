@@ -9,6 +9,7 @@
 typedef struct HxsExpr HxsExpr;
 typedef struct HxsStmt HxsStmt;
 typedef struct HxsType HxsType;
+typedef struct HxsFunctionArgument HxsFunctionArgument;
 
 typedef enum
 {
@@ -20,7 +21,12 @@ typedef enum
     BOOLEAN_EXPR,
 
     NEW_EXPR,
-    BINARY_OP
+    CALL_EXPR,
+    FIELD_EXPR,
+    INDEX_EXPR,
+
+    BINARY_OP,
+    UNARY_OP,
 } HXS_EXPR_KIND;
 
 typedef enum
@@ -141,7 +147,15 @@ struct HxsStmt
             char *name;
             HxsType *type;
         } var;
-        
+
+        struct
+        {
+            char *name;
+            int argsLength;
+            HxsFunctionArgument** args;
+
+            HxsStmt* body;
+        } function;
     };
 };
 
@@ -164,11 +178,25 @@ struct HxsType{
     
 };
 
+struct HxsFunctionArgument
+{
+    char *name;
+    bool optional;
+    HxsType* type;
+
+    HxsExpr* def;
+};
+
 HxsStmt *make_base_stmt(HXS_STMT_KIND kind);
 HxsStmt *make_expr_stmt(HxsExpr *value);
 HxsStmt *make_var_stmt(char* name, bool constant, HxsExpr *value, HxsType *type);
+HxsStmt *make_function_stmt(char* name, int argsLength, HxsFunctionArgument** args, HxsStmt* body);
 void free_stmt(HxsStmt *stmt);
 StringBuffer* print_stmt(HxsStmt *stmt, int spaces);
 
 void free_type(HxsType *type);
 StringBuffer* print_type(HxsType *type, int spaces);
+
+HxsFunctionArgument *make_argument(bool optional, char* name, HxsExpr* def, HxsType* type);
+void freeArgument(HxsFunctionArgument* arg);
+StringBuffer* print_argument(HxsFunctionArgument *arg, int spaces);

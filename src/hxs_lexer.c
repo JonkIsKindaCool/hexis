@@ -386,13 +386,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
     case ';':
         SINGLE(SEMICOLON_TOKEN);
     case '?':
-        lx_advance(lexer);
-        if (lx_peek(lexer) == '?')
-        {
-            lx_advance(lexer);
-            tok = create_base_token(NULLISH_TOKEN, line, start, lexer->linePos);
-        }
-        break;
+        DOUBLE('?', NULLISH_TOKEN, QUESTION_TOKEN);
 
     case '"':
     case '\'':

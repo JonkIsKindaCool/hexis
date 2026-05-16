@@ -43,7 +43,7 @@ HxsExpr *HxsParser_parseNullConditional(HxsParser *parser); // ?.
 HxsExpr *HxsParser_parsePrimitive(HxsParser *parser);
 
 void HxsParser_throw(HxsParser *parser, const char *fmt, ...);
-HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind);
+HxsToken *HxsParser_expect(HxsParser *parser, HxsTokenKind kind, const char* err);
 
 bool HxsParser_maybe(HxsParser *parser, HxsTokenKind kind);
 HxsType *HxsParser_parseType(HxsParser *parser);
