@@ -215,6 +215,10 @@ const char *token_kind_name(HxsTokenKind kind)
         return "CLASS";
     case EOF_TOKEN:
         return "EOF";
+    case QUESTION_TOKEN:
+        return "QUESTION";
+    case RETURN_TOKEN:
+        return "RETURN";
     default:
         return "UNKNOWN";
     }

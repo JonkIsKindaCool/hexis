@@ -76,6 +76,7 @@ static Keyword KEYWORDS[] = {
     {"try", TRY_TOKEN},
     {"catch", CATCH_TOKEN},
     {"class", CLASS_TOKEN},
+    {"return", RETURN_TOKEN},
     {NULL, EOF_TOKEN},
 };
 

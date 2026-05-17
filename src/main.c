@@ -1,5 +1,4 @@
 #include "hxs_lexer.h"
-#include "hxs_parser.h"
 
 char *read_file(const char *path)
 {
@@ -52,18 +51,6 @@ int main(int argc, char const *argv[])
     }
 
     free_lexer(lexer);
-
-    HxsParser *parser = init_parser(source);
-    HxsStmt *stmt = HxsParser_parse(parser);
-
-    StringBuffer* buf = print_stmt(stmt, 0);
-
-    printf("%s\n", buf->buf);
-
-    freeBuffer(buf);
-
-    free_stmt(stmt);
-    freeParser(parser);
 
     free((void *)source);
 
