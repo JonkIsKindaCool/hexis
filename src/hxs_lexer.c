@@ -217,7 +217,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 
     if (setjmp(lexer->error_jmp) != 0)
     {
-        fprintf(stderr, "[LexerError] line %ld character %ld: %s\n", lexer->line, lexer->linePos, lexer->error_msg);
+        fprintf(stderr, "[LexerError] line %d character %d: %s\n", lexer->line, lexer->linePos, lexer->error_msg);
         return NULL;
     }
 

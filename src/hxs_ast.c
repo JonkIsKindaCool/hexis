@@ -199,49 +199,50 @@ HxsExpr *Hxs_Expr_makeDoWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body)
 
 void Hxs_free_Expr(HxsExpr *expr)
 {
+    if (!expr)
+        return;
+
     switch (expr->kind)
     {
-    case HXS_EXPR_CONST_INT:
-    case HXS_EXPR_CONST_BOOL:
-    case HXS_EXPR_CONST_FLOAT:
-        break;
     case HXS_EXPR_CONST_STRING:
         free(expr->data.ConstString.value);
         break;
+
     case HXS_EXPR_IDENT:
         free(expr->data.Identifier.id);
         break;
+
     case HXS_EXPR_FIELD:
         Hxs_free_Expr(expr->data.Field.obj);
         free(expr->data.Field.field);
         break;
+
     case HXS_EXPR_INDEX_ACCESS:
         Hxs_free_Expr(expr->data.Index.obj);
         Hxs_free_Expr(expr->data.Index.index);
         break;
+
     case HXS_EXPR_BINOP:
         Hxs_free_Expr(expr->data.Binop.left);
         Hxs_free_Expr(expr->data.Binop.right);
         break;
+
     case HXS_EXPR_UNOP:
         Hxs_free_Expr(expr->data.Unop.expr);
         break;
+
     case HXS_EXPR_ARRAY_DECL:
-        size_t size = expr->data.ArrayDeclaration.size;
-
-        if (expr->data.ArrayDeclaration.body != NULL)
-        {
-            for (size_t i = 0; i < size; i++)
-            {
-                Hxs_free_Expr(expr->data.ArrayDeclaration.body[i]);
-            }
-
-            free(expr->data.ArrayDeclaration.body);
-        }
+        for (size_t i = 0; i < expr->data.ArrayDeclaration.size; i++)
+            Hxs_free_Expr(expr->data.ArrayDeclaration.body[i]);
+        free(expr->data.ArrayDeclaration.body);
         break;
+
     case HXS_EXPR_OBJECT_DECL:
-        size_t size = expr->data.ObjectDeclaration.size;
+        for (size_t i = 0; i < expr->data.ObjectDeclaration.size; i++)
+            Hxs_freeObjField(expr->data.ObjectDeclaration.values[i]);
+        free(expr->data.ObjectDeclaration.values);
         break;
+
     default:
         break;
     }

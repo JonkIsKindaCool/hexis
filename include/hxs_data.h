@@ -1,9 +1,14 @@
 #pragma once
-#include "hxs_ast.h"
+#include <stdbool.h>
+#include <stdlib.h>
+
+typedef struct HxsExpr HxsExpr;
+typedef struct HxsAstType HxsAstType;
 
 typedef struct HxsFuncArg HxsFuncArg;
-typedef struct HxsAnonField HxsAnonField;
 typedef struct HxsObjField HxsObjField;
+typedef struct HxsAnonField HxsAnonField;
+typedef struct HxsPosition HxsPosition;
 
 struct HxsFuncArg
 {
@@ -12,11 +17,11 @@ struct HxsFuncArg
     HxsExpr *def;
     HxsAstType *type;
 };
+
 struct HxsObjField
 {
     char *name;
     HxsExpr *value;
-    HxsAstType *type;
 };
 
 struct HxsAnonField
@@ -28,14 +33,19 @@ struct HxsAnonField
 
 struct HxsPosition
 {
-    const char *filename;
+    char *filename;
     int line;
     int column;
     int pos;
     int length;
 };
 
-void Hxs_freeObjField(HxsObjField *field);
+HxsFuncArg*   Hxs_makeFuncArg(bool optional, const char* name, HxsExpr* def, HxsAstType* type);
+HxsObjField*  Hxs_makeObjField(const char* name, HxsExpr* value);
+HxsAnonField* Hxs_makeAnonField(bool optional, const char* name, HxsAstType* type);
+HxsPosition*  Hxs_makePosition(const char* filename, int line, int column, int pos, int length);
+
 void Hxs_freeFuncArg(HxsFuncArg* arg);
+void Hxs_freeObjField(HxsObjField* field);
 void Hxs_freeAnonField(HxsAnonField* arg);
-void Hxs_freePosition(HxsPosition *pos);
+void Hxs_freePosition(HxsPosition* pos);

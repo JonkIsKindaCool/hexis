@@ -5,6 +5,7 @@
 
 typedef struct HxsExpr HxsExpr;
 typedef struct HxsPosition HxsPosition;
+typedef struct HxsObjField HxsObjField;
 
 typedef enum
 {
