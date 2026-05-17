@@ -36,25 +36,12 @@ int main(int argc, char const *argv[])
     const char *source = read_file("../test.hxs");
     HxsArena *arena = Hxs_Arena_create(1024 * 1024);
 
-    HxsLexer *lex = Hxs_make_lexer(arena, source);
-
-    while (true)
-    {
-        HxsToken* token = Hxs_get_token(lex, true);
-        char* info = Hxs_token_to_string(token);
-
-        printf("%s\n", info);
-        free(info);
-
-        if (token->kind == EOF_TOKEN){
-            break;
-        }
-    }
-    
-
     HxsLexer *lexer = Hxs_make_lexer(arena, source);
-    HxsParser *parser = Hxs_Parser_new(arena, lexer, "../test.hxs");
+
+    HxsParser *parser = Hxs_Parser_new(arena, lexer, "test.hxs");
+
     HxsExpr *program = Hxs_Parser_parse_program(parser);
+
     Hxs_printExpr(program);
     Hxs_Arena_destroy(arena);
     free((void *)source);

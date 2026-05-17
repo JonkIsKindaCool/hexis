@@ -1,47 +1,76 @@
 #include "core/hxs_utils.h"
-#include "core/hxs_utils.h"
 #include "ast/hxs_ast.h"
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static int identation = 4;
+
+#define INDENT_NEXT(x) ((x) + identation)
 
 StringBuffer *Hxs_init_StringBuffer()
 {
     StringBuffer *buf = malloc(sizeof(StringBuffer));
-    buf->buf = malloc(0);
+
+    if (!buf)
+        return NULL;
+
+    buf->buf = NULL;
     buf->capacity = 0;
     buf->size = 0;
 
     return buf;
 }
+
 void Hxs_add_char_to_buffer(StringBuffer *buffer, char c)
 {
-    buffer->size++;
-    if (buffer->size >= buffer->capacity)
+    if (!buffer)
+        return;
+
+    if (buffer->size + 1 >= buffer->capacity)
     {
-        char *new = realloc(buffer->buf, sizeof(char) * (buffer->size + 1));
-        if (!new)
+        size_t newCapacity = buffer->capacity == 0
+                                 ? 16
+                                 : buffer->capacity * 2;
+
+        char *newBuf = realloc(buffer->buf, newCapacity);
+
+        if (!newBuf)
             return;
-        buffer->buf = new;
-        buffer->capacity = buffer->size + 1;
+
+        buffer->buf = newBuf;
+        buffer->capacity = newCapacity;
     }
-    buffer->buf[buffer->size - 1] = c;
+
+    buffer->buf[buffer->size++] = c;
     buffer->buf[buffer->size] = '\0';
 }
+
 void Hxs_add_string_buffer(StringBuffer *buffer, const char *str)
 {
-    int len = strlen(str);
+    if (!buffer || !str)
+        return;
 
-    for (size_t i = 0; i < len; i++)
+    while (*str)
     {
-        Hxs_add_char_to_buffer(buffer, str[i]);
+        Hxs_add_char_to_buffer(buffer, *str++);
     }
 }
+
 char *Hxs_buffer_to_str(StringBuffer *buffer)
 {
+    if (!buffer)
+        return NULL;
+
     return buffer->buf;
 }
 
 void Hxs_freeBuffer(StringBuffer *buffer)
 {
+    if (!buffer)
+        return;
+
     free(buffer->buf);
     free(buffer);
 }
@@ -49,17 +78,16 @@ void Hxs_freeBuffer(StringBuffer *buffer)
 char *Hxs_strdup(HxsArena *arena, const char *str)
 {
     if (!str)
-    {
         return NULL;
-    }
 
     size_t len = strlen(str) + 1;
+
     char *copy = Hxs_Arena_alloc(arena, len);
 
-    if (copy)
-    {
-        memcpy(copy, str, len);
-    }
+    if (!copy)
+        return NULL;
+
+    memcpy(copy, str, len);
 
     return copy;
 }
@@ -231,7 +259,7 @@ static void print_indent(int indent)
 {
     for (int i = 0; i < indent; i++)
     {
-        printf("  ");
+        putchar(' ');
     }
 }
 
@@ -243,14 +271,17 @@ static void Hxs_printExprInternal(const HxsExpr *expr, int indent)
         return;
     }
 
+    int sub = INDENT_NEXT(indent);
+
     printf("{\n");
-    int sub = indent + 1;
 
     print_indent(sub);
     printf("\"kind\": \"%s\",\n", kind_to_str(expr->kind));
 
     print_indent(sub);
-    printf("\"pos\": {\"line\": %d, \"column\": %d},\n", expr->pos.line, expr->pos.column);
+    printf("\"pos\": {\"line\": %d, \"column\": %d},\n",
+           expr->pos.line,
+           expr->pos.column);
 
     print_indent(sub);
     printf("\"data\": ");
@@ -259,290 +290,519 @@ static void Hxs_printExprInternal(const HxsExpr *expr, int indent)
     {
     case HXS_EXPR_CONST_INT:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"value\": %lld\n", (long long)expr->data.ConstInt.value);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"value\": %lld\n",
+               (long long)expr->data.ConstInt.value);
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_CONST_FLOAT:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"value\": %f\n", expr->data.ConstFloat.value);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"value\": %f\n",
+               expr->data.ConstFloat.value);
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_CONST_STRING:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"value\": \"%s\"\n", expr->data.ConstString.value ? expr->data.ConstString.value : "null");
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"value\": \"%s\"\n",
+               expr->data.ConstString.value
+                   ? expr->data.ConstString.value
+                   : "null");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_CONST_BOOL:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"value\": %s\n", expr->data.ConstBool.value ? "true" : "false");
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"value\": %s\n",
+               expr->data.ConstBool.value
+                   ? "true"
+                   : "false");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_CONST_NULL:
         printf("{}\n");
         break;
+
     case HXS_EXPR_IDENT:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"id\": \"%s\"\n", expr->data.Identifier.id ? expr->data.Identifier.id : "");
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"id\": \"%s\"\n",
+               expr->data.Identifier.id
+                   ? expr->data.Identifier.id
+                   : "");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_FIELD:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"obj\": ");
-        Hxs_printExprInternal(expr->data.Field.obj, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Field.obj,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
-        printf("\"field\": \"%s\"\n", expr->data.Field.field ? expr->data.Field.field : "");
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"field\": \"%s\"\n",
+               expr->data.Field.field
+                   ? expr->data.Field.field
+                   : "");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_INDEX_ACCESS:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"obj\": ");
-        Hxs_printExprInternal(expr->data.Index.obj, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Index.obj,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"index\": ");
-        Hxs_printExprInternal(expr->data.Index.index, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Index.index,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_BINOP:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"left\": ");
-        Hxs_printExprInternal(expr->data.Binop.left, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Binop.left,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
-        printf("\"op\": \"%s\",\n", binop_to_str(expr->data.Binop.op));
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"op\": \"%s\",\n",
+               binop_to_str(expr->data.Binop.op));
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"right\": ");
-        Hxs_printExprInternal(expr->data.Binop.right, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Binop.right,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_UNOP:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"op\": \"%s\",\n", unop_to_str(expr->data.Unop.op));
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"op\": \"%s\",\n",
+               unop_to_str(expr->data.Unop.op));
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"expr\": ");
-        Hxs_printExprInternal(expr->data.Unop.expr, sub + 1);
+        Hxs_printExprInternal(
+            expr->data.Unop.expr,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_ARRAY_DECL:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"size\": %zu,\n", expr->data.ArrayDeclaration.size);
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"size\": %zu,\n",
+               expr->data.ArrayDeclaration.size);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"body\": [\n");
-        for (size_t i = 0; i < expr->data.ArrayDeclaration.size; i++)
+
+        for (size_t i = 0;
+             i < expr->data.ArrayDeclaration.size;
+             i++)
         {
-            print_indent(sub + 2);
-            Hxs_printExprInternal(expr->data.ArrayDeclaration.body[i], sub + 2);
+            print_indent(sub + identation * 2);
+
+            Hxs_printExprInternal(
+                expr->data.ArrayDeclaration.body[i],
+                sub + identation * 2);
+
             if (i < expr->data.ArrayDeclaration.size - 1)
                 printf(",\n");
             else
                 printf("\n");
         }
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("]\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_OBJECT_DECL:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"size\": %zu,\n", expr->data.ObjectDeclaration.size);
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"size\": %zu,\n",
+               expr->data.ObjectDeclaration.size);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"values\": [\n");
-        for (size_t i = 0; i < expr->data.ObjectDeclaration.size; i++)
+
+        for (size_t i = 0;
+             i < expr->data.ObjectDeclaration.size;
+             i++)
         {
-            print_indent(sub + 2);
+            print_indent(sub + identation * 2);
             printf("{\n");
-            print_indent(sub + 3);
-            printf("\"name\": \"%s\",\n", expr->data.ObjectDeclaration.values[i]->name ? expr->data.ObjectDeclaration.values[i]->name : "");
-            print_indent(sub + 3);
+
+            print_indent(sub + identation * 3);
+            printf("\"name\": \"%s\",\n",
+                   expr->data.ObjectDeclaration.values[i]->name
+                       ? expr->data.ObjectDeclaration.values[i]->name
+                       : "");
+
+            print_indent(sub + identation * 3);
             printf("\"value\": ");
-            Hxs_printExprInternal(expr->data.ObjectDeclaration.values[i]->value, sub + 3);
+
+            Hxs_printExprInternal(
+                expr->data.ObjectDeclaration.values[i]->value,
+                sub + identation * 3);
+
             printf("\n");
-            print_indent(sub + 2);
+
+            print_indent(sub + identation * 2);
             printf("}");
+
             if (i < expr->data.ObjectDeclaration.size - 1)
                 printf(",\n");
             else
                 printf("\n");
         }
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("]\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_CALL:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"target\": ");
-        Hxs_printExprInternal(expr->data.Call.target, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.Call.target,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
-        printf("\"totalArgs\": %zu,\n", expr->data.Call.totalArgs);
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"totalArgs\": %zu,\n",
+               expr->data.Call.totalArgs);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"args\": [\n");
-        for (size_t i = 0; i < expr->data.Call.totalArgs; i++)
+
+        for (size_t i = 0;
+             i < expr->data.Call.totalArgs;
+             i++)
         {
-            print_indent(sub + 2);
-            Hxs_printExprInternal(expr->data.Call.args[i], sub + 2);
+            print_indent(sub + identation * 2);
+
+            Hxs_printExprInternal(
+                expr->data.Call.args[i],
+                sub + identation * 2);
+
             if (i < expr->data.Call.totalArgs - 1)
                 printf(",\n");
             else
                 printf("\n");
         }
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("]\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_NEW:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"target\": \"%s\",\n", expr->data.New.target ? expr->data.New.target : "");
-        print_indent(sub + 1);
-        printf("\"totalArgs\": %zu,\n", expr->data.New.totalArgs);
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"target\": \"%s\",\n",
+               expr->data.New.target
+                   ? expr->data.New.target
+                   : "");
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"totalArgs\": %zu,\n",
+               expr->data.New.totalArgs);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"args\": [\n");
-        for (size_t i = 0; i < expr->data.New.totalArgs; i++)
+
+        for (size_t i = 0;
+             i < expr->data.New.totalArgs;
+             i++)
         {
-            print_indent(sub + 2);
-            Hxs_printExprInternal(expr->data.New.args[i], sub + 2);
+            print_indent(sub + identation * 2);
+
+            Hxs_printExprInternal(
+                expr->data.New.args[i],
+                sub + identation * 2);
+
             if (i < expr->data.New.totalArgs - 1)
                 printf(",\n");
             else
                 printf("\n");
         }
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("]\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_BLOCK:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"size\": %zu,\n", expr->data.Block.size);
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"size\": %zu,\n",
+               expr->data.Block.size);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"body\": [\n");
-        for (size_t i = 0; i < expr->data.Block.size; i++)
+
+        for (size_t i = 0;
+             i < expr->data.Block.size;
+             i++)
         {
-            print_indent(sub + 2);
-            Hxs_printExprInternal(expr->data.Block.body[i], sub + 2);
+            print_indent(sub + identation * 2);
+
+            Hxs_printExprInternal(
+                expr->data.Block.body[i],
+                sub + identation * 2);
+
             if (i < expr->data.Block.size - 1)
                 printf(",\n");
             else
                 printf("\n");
         }
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("]\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_IF:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"cond\": ");
-        Hxs_printExprInternal(expr->data.If.cond, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.If.cond,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"value\": ");
-        Hxs_printExprInternal(expr->data.If.value, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.If.value,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"elsee\": ");
-        Hxs_printExprInternal(expr->data.If.elsee, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.If.elsee,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_TERNARY:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"cond\": ");
-        Hxs_printExprInternal(expr->data.Ternary.cond, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.Ternary.cond,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"onTrue\": ");
-        Hxs_printExprInternal(expr->data.Ternary.onTrue, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.Ternary.onTrue,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"onFalse\": ");
-        Hxs_printExprInternal(expr->data.Ternary.onFalse, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.Ternary.onFalse,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_SWITCH:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"target\": ");
-        Hxs_printExprInternal(expr->data.Switch.target, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.Switch.target,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_FOR:
         printf("{\n");
-        print_indent(sub + 1);
-        printf("\"variable\": \"%s\",\n", expr->data.For.variable ? expr->data.For.variable : "");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
+        printf("\"variable\": \"%s\",\n",
+               expr->data.For.variable
+                   ? expr->data.For.variable
+                   : "");
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"target\": ");
-        Hxs_printExprInternal(expr->data.For.target, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.For.target,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"body\": ");
-        Hxs_printExprInternal(expr->data.For.body, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.For.body,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_WHILE:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"cond\": ");
-        Hxs_printExprInternal(expr->data.While.cond, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.While.cond,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"body\": ");
-        Hxs_printExprInternal(expr->data.While.body, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.While.body,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     case HXS_EXPR_DO_WHILE:
         printf("{\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"cond\": ");
-        Hxs_printExprInternal(expr->data.DoWhile.cond, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.DoWhile.cond,
+            INDENT_NEXT(sub));
+
         printf(",\n");
-        print_indent(sub + 1);
+
+        print_indent(INDENT_NEXT(sub));
         printf("\"body\": ");
-        Hxs_printExprInternal(expr->data.DoWhile.body, sub + 1);
+
+        Hxs_printExprInternal(
+            expr->data.DoWhile.body,
+            INDENT_NEXT(sub));
+
         printf("\n");
+
         print_indent(sub);
         printf("}\n");
         break;
+
     default:
         printf("{}\n");
         break;
