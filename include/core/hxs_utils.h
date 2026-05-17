@@ -4,6 +4,8 @@
 #include "core/hxs_arena.h"
 #include "stdlib.h"
 
+typedef struct HxsExpr HxsExpr;
+
 typedef struct
 {
     char *buf;
@@ -17,5 +19,6 @@ void Hxs_add_string_buffer(StringBuffer* buffer, const char* str);
 char* Hxs_buffer_to_str(StringBuffer* buffer);
 void Hxs_freeBuffer(StringBuffer* buffer);
 
-
 char *Hxs_strdup(HxsArena* arena, const char *str);
+
+void Hxs_printExpr(HxsExpr *expr);

@@ -1,21 +1,26 @@
 #pragma once
 
+#include "lexer/hxs_lexer.h"
 #include "ast/hxs_ast.h"
 
-typedef struct
+typedef struct HxsParser
 {
-    HxsLexer *lexer;
     HxsArena *arena;
-
+    HxsLexer *lexer;
+    HxsToken *current;
+    HxsToken *peek;
+    const char *filename;   
     jmp_buf error_jmp;
-    char error_msg[512];
+    char error_msg[256];
     bool has_error;
 } HxsParser;
 
-HxsExpr* Hxs_parseMultiple(HxsParser* parser, HxsTokenKind ender);
+typedef struct
+{
+    HxsBinop op;
+    int precedence;
+} Hxs_BinopPrecedence;
 
-bool Hxs_parser_peek(HxsParser* parser);
-bool Hxs_parser_advance(HxsParser* parser);
-bool Hxs_parser_expect(HxsParser* parser, HxsTokenKind expect, const char* err);
-bool Hxs_parser_maybe(HxsParser* parser, HxsTokenKind kind);
-void Hxs_parser_throw(HxsParser *parser, const char *fmt, ...);
+HxsParser *Hxs_Parser_new(HxsArena *arena, HxsLexer *lexer, const char *filename);
+HxsExpr *Hxs_Parser_parse_program(HxsParser *parser);
+void Hxs_Parser_free(HxsParser *parser);

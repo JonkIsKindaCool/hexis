@@ -92,6 +92,7 @@ typedef enum
     HXS_BINOP_USHR,    // >>>
 
     HXS_BINOP_IN,
+    HXS_BINOP_SPREAD,
 
 } HxsBinop;
 
@@ -244,5 +245,3 @@ HxsExpr *Hxs_Expr_makeSwitch(HxsArena* arena, HxsPosition pos, HxsExpr *target);
 HxsExpr *Hxs_Expr_makeFor(HxsArena* arena, HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeDoWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
-
-void Hxs_free_Expr(HxsExpr* expr);
