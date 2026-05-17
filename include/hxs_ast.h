@@ -104,13 +104,6 @@ typedef enum
     HXS_UNOP_POST_DEC, // expr--
 } HxsUnop;
 
-typedef enum
-{
-    HXS_BASIC_TYPE,    // variable:Int or variable:Map<String, Int>
-    HXS_FUNCTION_TYPE, // variable:(String, Int, Float) => Void
-    HXS_ANON_TYPE,     // variable:{id:String, ?value:Int}
-} HxsAstTypeKind;
-
 struct HxsExpr
 {
     HxsExprKind kind;
@@ -249,3 +242,5 @@ HxsExpr *Hxs_Expr_makeSwitch(HxsPosition pos, HxsExpr *target);
 HxsExpr *Hxs_Expr_makeFor(HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeDoWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
+
+void Hxs_free_Expr(HxsExpr* expr);

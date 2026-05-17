@@ -34,3 +34,8 @@ struct HxsPosition
     int pos;
     int length;
 };
+
+void Hxs_freeObjField(HxsObjField *field);
+void Hxs_freeFuncArg(HxsFuncArg* arg);
+void Hxs_freeAnonField(HxsAnonField* arg);
+void Hxs_freePosition(HxsPosition *pos);
