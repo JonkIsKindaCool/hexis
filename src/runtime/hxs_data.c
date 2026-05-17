@@ -1,6 +1,6 @@
-#include "hxs_data.h"
-#include "hxs_ast.h"   
-#include "hxs_types.h"  
+#include "runtime/hxs_data.h"
+#include "ast/hxs_ast.h"     
+#include "types/hxs_types.h"  
 #include <string.h>
 
 HxsFuncArg* Hxs_makeFuncArg(bool optional, const char* name, HxsExpr* def, HxsAstType* type)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hxs_ast.h"
+#include "ast/hxs_ast.h"
 
 typedef struct
 {

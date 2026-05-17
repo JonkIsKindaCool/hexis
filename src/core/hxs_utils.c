@@ -1,4 +1,4 @@
-#include "hxs_utils.h"
+#include "core/hxs_utils.h"
 
 StringBuffer *init_StringBuffer()
 {

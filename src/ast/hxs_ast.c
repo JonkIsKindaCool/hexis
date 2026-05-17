@@ -1,4 +1,4 @@
-#include "hxs_ast.h"
+#include "ast/hxs_ast.h"
 
 HxsExpr *Hxs_Expr_makeExpression(HxsExprKind kind, HxsPosition pos)
 {

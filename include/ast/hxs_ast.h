@@ -1,7 +1,7 @@
 #pragma once
-#include "hxs_lexer.h"
-#include "hxs_types.h"
-#include "hxs_data.h"
+#include "lexer/hxs_lexer.h"
+#include "types/hxs_types.h"
+#include "runtime/hxs_data.h"
 
 typedef struct HxsExpr HxsExpr;
 typedef struct HxsPosition HxsPosition;

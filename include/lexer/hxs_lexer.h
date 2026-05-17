@@ -1,5 +1,6 @@
 #pragma once
-#include "hxs_token.h"
+#include "lexer/hxs_token.h"
+#include "core/hxs_arena.h"
 #include "setjmp.h"
 #include <stdarg.h>
 
@@ -10,6 +11,8 @@ typedef struct
     int pos;
     int line;
     int linePos;
+
+    HxsArena* arena;
 
     jmp_buf error_jmp;
     char error_msg[512];

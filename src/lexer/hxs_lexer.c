@@ -1,4 +1,4 @@
-#include "hxs_lexer.h"
+#include "lexer/hxs_lexer.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -112,9 +112,9 @@ static HxsToken *lex_number(HxsLexer *l)
 
     HxsToken *tok;
     if (is_float)
-        tok = make_float_token(strtod(buf, NULL), line, start, l->linePos);
+        tok = make_float_token(l->arena, strtod(buf, NULL), line, start, l->linePos);
     else
-        tok = make_int_token((int64_t)strtoll(buf, NULL, 10), line, start, l->linePos);
+        tok = make_int_token(l->arena, (int64_t)strtoll(buf, NULL, 10), line, start, l->linePos);
 
     free(buf);
     return tok;
@@ -169,7 +169,7 @@ static HxsToken *lex_string(HxsLexer *l)
         lx_advance(l);
     buf[len] = '\0';
 
-    HxsToken *tok = make_string_token(buf, single, line, start, l->linePos);
+    HxsToken *tok = make_string_token(l->arena, buf, single, line, start, l->linePos);
     free(buf);
     return tok;
 }
@@ -191,9 +191,9 @@ static HxsToken *lex_identifier(HxsLexer *l)
     HxsToken *tok;
 
     if (kind == IDENTIFIER_TOKEN)
-        tok = make_identifier_token(buf, line, start, l->linePos);
+        tok = make_identifier_token(l->arena, buf, line, start, l->linePos);
     else
-        tok = create_base_token(kind, line, start, l->linePos);
+        tok = create_base_token(l->arena, kind, line, start, l->linePos);
 
     free(buf);
     return tok;
@@ -203,6 +203,7 @@ HxsLexer *make_lexer(const char *src)
 {
     HxsLexer *l = malloc(sizeof(HxsLexer));
     l->src = src;
+    l->arena = Hxs_Arena_create(1024 * 1024);
     l->line = 1;
     l->pos = 0;
     l->linePos = 1;
@@ -225,7 +226,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 
     if (lx_at_end(lexer))
     {
-        HxsToken *t = create_base_token(EOF_TOKEN, lexer->line, lexer->linePos, lexer->linePos);
+        HxsToken *t = create_base_token(lexer->arena, EOF_TOKEN, lexer->line, lexer->linePos, lexer->linePos);
         if (!advance)
         {
             lexer->pos = saved_pos;
@@ -243,7 +244,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 
 #define SINGLE(kind)                                            \
     lx_advance(lexer);                                          \
-    tok = create_base_token(kind, line, start, lexer->linePos); \
+    tok = create_base_token(lexer->arena, kind, line, start, lexer->linePos); \
     break
 
 #define DOUBLE(next, kind_double, kind_single)                             \
@@ -251,10 +252,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
     if (lx_peek(lexer) == (next))                                          \
     {                                                                      \
         lx_advance(lexer);                                                 \
-        tok = create_base_token(kind_double, line, start, lexer->linePos); \
+        tok = create_base_token(lexer->arena, kind_double, line, start, lexer->linePos); \
     }                                                                      \
     else                                                                   \
-        tok = create_base_token(kind_single, line, start, lexer->linePos); \
+        tok = create_base_token(lexer->arena, kind_single, line, start, lexer->linePos); \
     break
 
     switch (c)
@@ -264,10 +265,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(ADD_ASSIGN_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, ADD_ASSIGN_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(ADD_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, ADD_TOKEN, line, start, lexer->linePos);
         break;
 
     case '-':
@@ -275,10 +276,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(MINUS_ASSIGN_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MINUS_ASSIGN_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(MINUS_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MINUS_TOKEN, line, start, lexer->linePos);
         break;
 
     case '*':
@@ -286,10 +287,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(MULTIPLY_ASSIGN_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MULTIPLY_ASSIGN_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(MULTIPLY_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MULTIPLY_TOKEN, line, start, lexer->linePos);
         break;
 
     case '/':
@@ -297,10 +298,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(DIVIDE_ASSIGN_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, DIVIDE_ASSIGN_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(DIVIDE_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, DIVIDE_TOKEN, line, start, lexer->linePos);
         break;
 
     case '%':
@@ -308,10 +309,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(MODULO_ASSIGN_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MODULO_ASSIGN_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(MODULO_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, MODULO_TOKEN, line, start, lexer->linePos);
         break;
 
     case '=':
@@ -328,10 +329,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '&')
         {
             lx_advance(lexer);
-            tok = create_base_token(LOGICAL_AND_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, LOGICAL_AND_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(AND_BIT_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, AND_BIT_TOKEN, line, start, lexer->linePos);
         break;
 
     case '|':
@@ -339,10 +340,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '|')
         {
             lx_advance(lexer);
-            tok = create_base_token(LOGICAL_OR_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, LOGICAL_OR_TOKEN, line, start, lexer->linePos);
         }
         else
-            tok = create_base_token(OR_BIT_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, OR_BIT_TOKEN, line, start, lexer->linePos);
         break;
 
     case '^':
@@ -353,7 +354,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
         if (lx_peek(lexer) == '=')
         {
             lx_advance(lexer);
-            tok = create_base_token(NULL_OPTIONAL_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, NULL_OPTIONAL_TOKEN, line, start, lexer->linePos);
         }
         else if (lx_peek(lexer) == '.')
         {
@@ -361,17 +362,17 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
             if (lx_peek(lexer) == '=')
             {
                 lx_advance(lexer);
-                tok = create_base_token(SPREAD_EQUAL_TOKEN, line, start, lexer->linePos);
+                tok = create_base_token(lexer->arena, SPREAD_EQUAL_TOKEN, line, start, lexer->linePos);
             }
             else if (lx_peek(lexer) == '.')
             {
                 lx_advance(lexer);
-                tok = create_base_token(SPREAD_TOKEN, line, start, lexer->linePos);
+                tok = create_base_token(lexer->arena, SPREAD_TOKEN, line, start, lexer->linePos);
             }
         }
         else
         {
-            tok = create_base_token(DOT_TOKEN, line, start, lexer->linePos);
+            tok = create_base_token(lexer->arena, DOT_TOKEN, line, start, lexer->linePos);
         }
         break;
     case ',':
@@ -428,6 +429,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 
 void free_lexer(HxsLexer *lexer)
 {
+    Hxs_Arena_destroy(lexer->arena);
     free(lexer);
 }
 

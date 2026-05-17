@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/hxs_arena.h"
 #include "errno.h"
 #include "stdbool.h"
 
@@ -70,17 +71,17 @@ typedef enum
     NULL_OPTIONAL_TOKEN, // .=
 
     // SPECIAL CHARACTERS
-    COLON_TOKEN,            // :
-    SEMICOLON_TOKEN,        // ;
-    DOT_TOKEN,              // .
-    COMMA_TOKEN,            // ,
+    COLON_TOKEN,     // :
+    SEMICOLON_TOKEN, // ;
+    DOT_TOKEN,       // .
+    COMMA_TOKEN,     // ,
 
-    LEFTPAREN_TOKEN,        // (
-    RIGHTPAREN_TOKEN,       // )
-    LEFTBRACKET_TOKEN,      // [
-    RIGHTBRACKET_TOKEN,     // ]
-    LEFTCURLYBRACKET_TOKEN, // {
-    RIGHTCURLYBRACKET_TOKEN,// }
+    LEFTPAREN_TOKEN,         // (
+    RIGHTPAREN_TOKEN,        // )
+    LEFTBRACKET_TOKEN,       // [
+    RIGHTBRACKET_TOKEN,      // ]
+    LEFTCURLYBRACKET_TOKEN,  // {
+    RIGHTCURLYBRACKET_TOKEN, // }
 
     QUESTION_TOKEN, //?
 
@@ -90,14 +91,14 @@ typedef enum
 
 typedef union
 {
-    int64_t  int_val;
-    double   float_val;
-    char    *str_val;
+    int64_t int_val;
+    double float_val;
+    char *str_val;
 } HxsTokenValue;
 
 typedef struct
 {
-    HxsTokenKind  kind;
+    HxsTokenKind kind;
     HxsTokenValue value;
 
     size_t line;
@@ -105,12 +106,11 @@ typedef struct
     size_t end;
 } HxsToken;
 
-HxsToken *create_base_token(HxsTokenKind kind, size_t line, size_t start, size_t end);
-HxsToken *make_int_token(int64_t value, size_t line, size_t start, size_t end);
-HxsToken *make_float_token(double value, size_t line, size_t start, size_t end);
-HxsToken *make_identifier_token(const char *value, size_t line, size_t start, size_t end);
-HxsToken *make_string_token(const char *value, bool single, size_t line, size_t start, size_t end);
-void      freeToken(HxsToken *token);
+HxsToken *create_base_token(HxsArena *arena, HxsTokenKind kind, size_t line, size_t start, size_t end);
+HxsToken *make_int_token(HxsArena *arena, int64_t value, size_t line, size_t start, size_t end);
+HxsToken *make_float_token(HxsArena *arena, double value, size_t line, size_t start, size_t end);
+HxsToken *make_identifier_token(HxsArena *arena, const char *value, size_t line, size_t start, size_t end);
+HxsToken *make_string_token(HxsArena *arena, const char *value, bool single, size_t line, size_t start, size_t end);
 
 const char *token_kind_name(HxsTokenKind kind);
-char       *token_to_string(HxsToken *token);
+char *token_to_string(HxsToken *token);

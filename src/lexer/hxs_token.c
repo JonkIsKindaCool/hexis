@@ -1,8 +1,8 @@
-#include "hxs_token.h"
+#include "lexer/hxs_token.h"
 
-HxsToken *create_base_token(HxsTokenKind kind, size_t line, size_t start, size_t end)
+HxsToken *create_base_token(HxsArena* arena, HxsTokenKind kind, size_t line, size_t start, size_t end)
 {
-    HxsToken *tok = malloc(sizeof(HxsToken));
+    HxsToken *tok = Hxs_Arena_alloc(arena, sizeof(HxsToken));
     if (tok == NULL)
         return NULL;
 
@@ -15,9 +15,9 @@ HxsToken *create_base_token(HxsTokenKind kind, size_t line, size_t start, size_t
     return tok;
 }
 
-HxsToken *make_int_token(int64_t value, size_t line, size_t start, size_t end)
+HxsToken *make_int_token(HxsArena* arena,int64_t value, size_t line, size_t start, size_t end)
 {
-    HxsToken *tok = create_base_token(INT_TOKEN, line, start, end);
+    HxsToken *tok = create_base_token(arena, INT_TOKEN, line, start, end);
     if (tok == NULL)
         return NULL;
 
@@ -25,9 +25,9 @@ HxsToken *make_int_token(int64_t value, size_t line, size_t start, size_t end)
     return tok;
 }
 
-HxsToken *make_float_token(double value, size_t line, size_t start, size_t end)
+HxsToken *make_float_token(HxsArena* arena,double value, size_t line, size_t start, size_t end)
 {
-    HxsToken *tok = create_base_token(FLOAT_TOKEN, line, start, end);
+    HxsToken *tok = create_base_token(arena, FLOAT_TOKEN, line, start, end);
     if (tok == NULL)
         return NULL;
 
@@ -35,12 +35,12 @@ HxsToken *make_float_token(double value, size_t line, size_t start, size_t end)
     return tok;
 }
 
-HxsToken *make_identifier_token(const char *value, size_t line, size_t start, size_t end)
+HxsToken *make_identifier_token(HxsArena* arena,const char *value, size_t line, size_t start, size_t end)
 {
     if (value == NULL)
         return NULL;
 
-    HxsToken *tok = create_base_token(IDENTIFIER_TOKEN, line, start, end);
+    HxsToken *tok = create_base_token(arena, IDENTIFIER_TOKEN, line, start, end);
     if (tok == NULL)
         return NULL;
 
@@ -56,12 +56,12 @@ HxsToken *make_identifier_token(const char *value, size_t line, size_t start, si
     return tok;
 }
 
-HxsToken *make_string_token(const char *value, bool single, size_t line, size_t start, size_t end)
+HxsToken *make_string_token(HxsArena* arena,const char *value, bool single, size_t line, size_t start, size_t end)
 {
     if (value == NULL)
         return NULL;
 
-    HxsToken *tok = create_base_token(
+    HxsToken *tok = create_base_token(arena,
         single ? SINGLE_QUOTE_STRING_TOKEN : DOUBLE_QUOTE_STRING_TOKEN,
         line, start, end);
 
@@ -78,21 +78,6 @@ HxsToken *make_string_token(const char *value, bool single, size_t line, size_t 
 
     memcpy(tok->value.str_val, value, len + 1);
     return tok;
-}
-
-void freeToken(HxsToken *token)
-{
-    if (token == NULL)
-        return;
-
-    if (token->kind == IDENTIFIER_TOKEN ||
-        token->kind == SINGLE_QUOTE_STRING_TOKEN ||
-        token->kind == DOUBLE_QUOTE_STRING_TOKEN)
-    {
-        free(token->value.str_val);
-    }
-
-    free(token);
 }
 
 const char *token_kind_name(HxsTokenKind kind)

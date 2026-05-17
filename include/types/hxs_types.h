@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct HxsAnonField HxsAnonField;  // forward
+typedef struct HxsAnonField HxsAnonField; 
 typedef struct HxsAstType HxsAstType;
 
 typedef enum
