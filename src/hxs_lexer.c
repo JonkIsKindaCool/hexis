@@ -215,6 +215,12 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
     int saved_line = lexer->line;
     int saved_linePos = lexer->linePos;
 
+    if (setjmp(lexer->error_jmp) != 0)
+    {
+        fprintf(stderr, "[LexerError] line %ld character %ld: %s\n", lexer->line, lexer->linePos, lexer->error_msg);
+        return NULL;
+    }
+
     lx_skip_whitespace(lexer);
 
     if (lx_at_end(lexer))
@@ -405,6 +411,10 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 #undef SINGLE
 #undef DOUBLE
 
+    if (tok == NULL){
+        lexer_throw(lexer, "Unexpected Character %c", c);
+    }
+
     if (!advance)
     {
         lexer->pos = saved_pos;
@@ -419,4 +429,15 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 void free_lexer(HxsLexer *lexer)
 {
     free(lexer);
+}
+
+void lexer_throw(HxsLexer *lexer, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(lexer->error_msg, sizeof(lexer->error_msg), fmt, args);
+    va_end(args);
+
+    lexer->has_error = true;
+    longjmp(lexer->error_jmp, 1);
 }
