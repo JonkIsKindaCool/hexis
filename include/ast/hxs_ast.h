@@ -1,5 +1,6 @@
 #pragma once
 #include "lexer/hxs_lexer.h"
+#include "core/hxs_utils.h"
 #include "types/hxs_types.h"
 #include "runtime/hxs_data.h"
 
@@ -214,34 +215,34 @@ struct HxsExpr
     } data;
 };
 
-HxsExpr *Hxs_Expr_makeExpression(HxsExprKind kind, HxsPosition pos);
+HxsExpr *Hxs_Expr_makeExpression(HxsArena* arena, HxsExprKind kind, HxsPosition pos);
 
-HxsExpr *Hxs_Expr_makeIntLiteral(HxsPosition pos, int64_t value);
-HxsExpr *Hxs_Expr_makeFloatLiteral(HxsPosition pos, double value);
-HxsExpr *Hxs_Expr_makeStringLiteral(HxsPosition pos, char *value);
-HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsPosition pos, bool value);
+HxsExpr *Hxs_Expr_makeIntLiteral(HxsArena* arena, HxsPosition pos, int64_t value);
+HxsExpr *Hxs_Expr_makeFloatLiteral(HxsArena* arena, HxsPosition pos, double value);
+HxsExpr *Hxs_Expr_makeStringLiteral(HxsArena* arena, HxsPosition pos, char *value);
+HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsArena* arena, HxsPosition pos, bool value);
 
-HxsExpr *Hxs_Expr_makeIdentifier(HxsPosition pos, char *id);
+HxsExpr *Hxs_Expr_makeIdentifier(HxsArena* arena, HxsPosition pos, char *id);
 
-HxsExpr *Hxs_Expr_makeField(HxsPosition pos, HxsExpr *parent, char *field);
-HxsExpr *Hxs_Expr_makeIndex(HxsPosition pos, HxsExpr *parent, HxsExpr *index);
+HxsExpr *Hxs_Expr_makeField(HxsArena* arena, HxsPosition pos, HxsExpr *parent, char *field);
+HxsExpr *Hxs_Expr_makeIndex(HxsArena* arena, HxsPosition pos, HxsExpr *parent, HxsExpr *index);
 
-HxsExpr *Hxs_Expr_makeBinop(HxsPosition pos, HxsBinop binop, HxsExpr *left, HxsExpr *right);
-HxsExpr *Hxs_Expr_makeUnop(HxsPosition pos, HxsUnop unop, HxsExpr *value);
+HxsExpr *Hxs_Expr_makeBinop(HxsArena* arena, HxsPosition pos, HxsBinop binop, HxsExpr *left, HxsExpr *right);
+HxsExpr *Hxs_Expr_makeUnop(HxsArena* arena, HxsPosition pos, HxsUnop unop, HxsExpr *value);
 
-HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsPosition pos, size_t size, HxsExpr **values);
-HxsExpr *Hxs_Expr_makeObjDeclaration(HxsPosition pos, size_t size, HxsObjField **values);
+HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsArena* arena, HxsPosition pos, size_t size, HxsExpr **values);
+HxsExpr *Hxs_Expr_makeObjDeclaration(HxsArena* arena, HxsPosition pos, size_t size, HxsObjField **values);
 
-HxsExpr *Hxs_Expr_makeCall(HxsPosition pos, HxsExpr *target, size_t size, HxsExpr **values);
-HxsExpr *Hxs_Expr_makeNew(HxsPosition pos, char *target, size_t size, HxsExpr **values);
+HxsExpr *Hxs_Expr_makeCall(HxsArena* arena, HxsPosition pos, HxsExpr *target, size_t size, HxsExpr **values);
+HxsExpr *Hxs_Expr_makeNew(HxsArena* arena, HxsPosition pos, char *target, size_t size, HxsExpr **values);
 
-HxsExpr *Hxs_Expr_makeBlock(HxsPosition pos, size_t size, HxsExpr **body);
-HxsExpr *Hxs_Expr_makeIf(HxsPosition pos, HxsExpr *cond, HxsExpr *body, HxsExpr *elsee);
-HxsExpr *Hxs_Expr_makeTernary(HxsPosition pos, HxsExpr *cond, HxsExpr *onTrue, HxsExpr *onFalse);
+HxsExpr *Hxs_Expr_makeBlock(HxsArena* arena, HxsPosition pos, size_t size, HxsExpr **body);
+HxsExpr *Hxs_Expr_makeIf(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body, HxsExpr *elsee);
+HxsExpr *Hxs_Expr_makeTernary(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *onTrue, HxsExpr *onFalse);
 
-HxsExpr *Hxs_Expr_makeSwitch(HxsPosition pos, HxsExpr *target);
-HxsExpr *Hxs_Expr_makeFor(HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
-HxsExpr *Hxs_Expr_makeWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
-HxsExpr *Hxs_Expr_makeDoWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
+HxsExpr *Hxs_Expr_makeSwitch(HxsArena* arena, HxsPosition pos, HxsExpr *target);
+HxsExpr *Hxs_Expr_makeFor(HxsArena* arena, HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
+HxsExpr *Hxs_Expr_makeWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
+HxsExpr *Hxs_Expr_makeDoWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
 
 void Hxs_free_Expr(HxsExpr* expr);

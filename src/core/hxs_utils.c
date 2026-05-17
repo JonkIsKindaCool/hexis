@@ -1,6 +1,6 @@
 #include "core/hxs_utils.h"
 
-StringBuffer *init_StringBuffer()
+StringBuffer *Hxs_init_StringBuffer()
 {
     StringBuffer *buf = malloc(sizeof(StringBuffer));
     buf->buf = malloc(0);
@@ -9,7 +9,7 @@ StringBuffer *init_StringBuffer()
 
     return buf;
 }
-void add_char_to_buffer(StringBuffer *buffer, char c)
+void Hxs_add_char_to_buffer(StringBuffer *buffer, char c)
 {
     buffer->size++;
     if (buffer->size >= buffer->capacity)
@@ -23,22 +23,40 @@ void add_char_to_buffer(StringBuffer *buffer, char c)
     buffer->buf[buffer->size - 1] = c;
     buffer->buf[buffer->size] = '\0';
 }
-void add_string_buffer(StringBuffer *buffer, const char *str)
+void Hxs_add_string_buffer(StringBuffer *buffer, const char *str)
 {
     int len = strlen(str);
 
     for (size_t i = 0; i < len; i++)
     {
-        add_char_to_buffer(buffer, str[i]);
+        Hxs_add_char_to_buffer(buffer, str[i]);
     }
 }
-char *buffer_to_str(StringBuffer *buffer)
+char *Hxs_buffer_to_str(StringBuffer *buffer)
 {
     return buffer->buf;
 }
 
-void freeBuffer(StringBuffer *buffer)
+void Hxs_freeBuffer(StringBuffer *buffer)
 {
     free(buffer->buf);
     free(buffer);
+}
+
+char *Hxs_strdup(HxsArena* arena, const char *str)
+{
+    if (!str)
+    {
+        return NULL;
+    }
+
+    size_t len = strlen(str) + 1;
+    char *copy = Hxs_Arena_alloc(arena, len);
+
+    if (copy)
+    {
+        memcpy(copy, str, len);
+    }
+
+    return copy;
 }

@@ -35,7 +35,7 @@ HxsToken *make_float_token(HxsArena* arena,double value, size_t line, size_t sta
     return tok;
 }
 
-HxsToken *make_identifier_token(HxsArena* arena,const char *value, size_t line, size_t start, size_t end)
+HxsToken *make_identifier_token(HxsArena* arena, char *value, size_t line, size_t start, size_t end)
 {
     if (value == NULL)
         return NULL;
@@ -44,19 +44,17 @@ HxsToken *make_identifier_token(HxsArena* arena,const char *value, size_t line, 
     if (tok == NULL)
         return NULL;
 
-    size_t len = strlen(value);
-    tok->value.str_val = malloc(len + 1);
+    tok->value.str_val = value;
     if (tok->value.str_val == NULL)
     {
         free(tok);
         return NULL;
     }
 
-    memcpy(tok->value.str_val, value, len + 1);
     return tok;
 }
 
-HxsToken *make_string_token(HxsArena* arena,const char *value, bool single, size_t line, size_t start, size_t end)
+HxsToken *make_string_token(HxsArena* arena, char *value, bool single, size_t line, size_t start, size_t end)
 {
     if (value == NULL)
         return NULL;
@@ -68,15 +66,13 @@ HxsToken *make_string_token(HxsArena* arena,const char *value, bool single, size
     if (tok == NULL)
         return NULL;
 
-    size_t len = strlen(value);
-    tok->value.str_val = malloc(len + 1);
+    tok->value.str_val = value;
     if (tok->value.str_val == NULL)
     {
         free(tok);
         return NULL;
     }
 
-    memcpy(tok->value.str_val, value, len + 1);
     return tok;
 }
 
@@ -209,7 +205,7 @@ const char *token_kind_name(HxsTokenKind kind)
     }
 }
 
-char *token_to_string(HxsToken *token)
+char *Hxs_token_to_string(HxsToken *token)
 {
     if (!token)
         return strdup("(null token)");

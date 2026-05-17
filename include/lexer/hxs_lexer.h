@@ -19,8 +19,8 @@ typedef struct
     bool has_error;
 } HxsLexer;
 
-HxsLexer *make_lexer(const char *src);
-void free_lexer(HxsLexer *lexer);
+HxsLexer *Hxs_make_lexer(HxsArena* arena, const char *src);
+void Hxs_free_lexer(HxsLexer *lexer);
 
-HxsToken *get_token(HxsLexer *lexer, bool advance);
-void lexer_throw(HxsLexer *lexer, const char *fmt, ...);
+HxsToken *Hxs_get_token(HxsLexer *lexer, bool advance);
+void Hxs_lexer_throw(HxsLexer *lexer, const char *fmt, ...);

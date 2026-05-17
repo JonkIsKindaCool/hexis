@@ -109,8 +109,8 @@ typedef struct
 HxsToken *create_base_token(HxsArena *arena, HxsTokenKind kind, size_t line, size_t start, size_t end);
 HxsToken *make_int_token(HxsArena *arena, int64_t value, size_t line, size_t start, size_t end);
 HxsToken *make_float_token(HxsArena *arena, double value, size_t line, size_t start, size_t end);
-HxsToken *make_identifier_token(HxsArena *arena, const char *value, size_t line, size_t start, size_t end);
-HxsToken *make_string_token(HxsArena *arena, const char *value, bool single, size_t line, size_t start, size_t end);
+HxsToken *make_identifier_token(HxsArena *arena, char *value, size_t line, size_t start, size_t end);
+HxsToken *make_string_token(HxsArena *arena, char *value, bool single, size_t line, size_t start, size_t end);
 
 const char *token_kind_name(HxsTokenKind kind);
-char *token_to_string(HxsToken *token);
+char *Hxs_token_to_string(HxsToken *token);

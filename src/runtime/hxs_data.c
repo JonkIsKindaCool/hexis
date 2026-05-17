@@ -3,9 +3,9 @@
 #include "types/hxs_types.h"  
 #include <string.h>
 
-HxsFuncArg* Hxs_makeFuncArg(bool optional, const char* name, HxsExpr* def, HxsAstType* type)
+HxsFuncArg* Hxs_makeFuncArg(HxsArena* arena, bool optional, const char* name, HxsExpr* def, HxsAstType* type)
 {
-    HxsFuncArg* arg = malloc(sizeof(*arg));
+    HxsFuncArg* arg = Hxs_Arena_alloc(arena, sizeof(*arg));
     arg->optional = optional;
     arg->name = name ? strdup(name) : NULL;
     arg->def = def;
@@ -13,62 +13,30 @@ HxsFuncArg* Hxs_makeFuncArg(bool optional, const char* name, HxsExpr* def, HxsAs
     return arg;
 }
 
-HxsObjField* Hxs_makeObjField(const char* name, HxsExpr* value)
+HxsObjField* Hxs_makeObjField(HxsArena* arena, const char* name, HxsExpr* value)
 {
-    HxsObjField* f = malloc(sizeof(*f));
+    HxsObjField* f = Hxs_Arena_alloc(arena, sizeof(*f));
     f->name = name ? strdup(name) : NULL;
     f->value = value;
     return f;
 }
 
-HxsAnonField* Hxs_makeAnonField(bool optional, const char* name, HxsAstType* type)
+HxsAnonField* Hxs_makeAnonField(HxsArena* arena, bool optional, const char* name, HxsAstType* type)
 {
-    HxsAnonField* f = malloc(sizeof(*f));
+    HxsAnonField* f = Hxs_Arena_alloc(arena, sizeof(*f));
     f->optional = optional;
     f->name = name ? strdup(name) : NULL;
     f->type = type;
     return f;
 }
 
-HxsPosition* Hxs_makePosition(const char* filename, int line, int column, int pos, int length)
+HxsPosition* Hxs_makePosition(HxsArena* arena, const char* filename, int line, int column, int pos, int length)
 {
-    HxsPosition* p = malloc(sizeof(*p));
+    HxsPosition* p = Hxs_Arena_alloc(arena, sizeof(*p));
     p->filename = strdup(filename ? filename : "<unknown>");
     p->line = line;
     p->column = column;
     p->pos = pos;
     p->length = length;
     return p;
-}
-
-void Hxs_freeFuncArg(HxsFuncArg* arg)
-{
-    if (!arg) return;
-    free(arg->name);
-    Hxs_free_Expr(arg->def);
-    Hxs_freeType(arg->type);
-    free(arg);
-}
-
-void Hxs_freeObjField(HxsObjField* field)
-{
-    if (!field) return;
-    free(field->name);
-    Hxs_free_Expr(field->value);
-    free(field);
-}
-
-void Hxs_freeAnonField(HxsAnonField* arg)
-{
-    if (!arg) return;
-    free(arg->name);
-    Hxs_freeType(arg->type);
-    free(arg);
-}
-
-void Hxs_freePosition(HxsPosition* pos)
-{
-    if (!pos) return;
-    free(pos->filename);
-    free(pos);
 }

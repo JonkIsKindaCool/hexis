@@ -106,7 +106,7 @@ static HxsToken *lex_number(HxsLexer *l)
     }
 
     size_t len = l->linePos - start;
-    char *buf = malloc(len + 1);
+    char *buf = Hxs_Arena_alloc(l->arena, len + 1);
     memcpy(buf, l->src + (l->pos - len), len);
     buf[len] = '\0';
 
@@ -116,7 +116,6 @@ static HxsToken *lex_number(HxsLexer *l)
     else
         tok = make_int_token(l->arena, (int64_t)strtoll(buf, NULL, 10), line, start, l->linePos);
 
-    free(buf);
     return tok;
 }
 
@@ -128,7 +127,7 @@ static HxsToken *lex_string(HxsLexer *l)
     bool single = (quote == '\'');
 
     size_t cap = 64, len = 0;
-    char *buf = malloc(cap);
+    char *buf = Hxs_Arena_alloc(l->arena, cap);
 
     while (!lx_at_end(l) && lx_peek(l) != quote)
     {
@@ -170,7 +169,6 @@ static HxsToken *lex_string(HxsLexer *l)
     buf[len] = '\0';
 
     HxsToken *tok = make_string_token(l->arena, buf, single, line, start, l->linePos);
-    free(buf);
     return tok;
 }
 
@@ -183,7 +181,7 @@ static HxsToken *lex_identifier(HxsLexer *l)
         lx_advance(l);
 
     size_t len = l->linePos - start;
-    char *buf = malloc(len + 1);
+    char *buf = Hxs_Arena_alloc(l->arena, len + 1);
     memcpy(buf, l->src + (l->pos - len), len);
     buf[len] = '\0';
 
@@ -195,22 +193,21 @@ static HxsToken *lex_identifier(HxsLexer *l)
     else
         tok = create_base_token(l->arena, kind, line, start, l->linePos);
 
-    free(buf);
     return tok;
 }
 
-HxsLexer *make_lexer(const char *src)
+HxsLexer *Hxs_make_lexer(HxsArena* arena, const char *src)
 {
-    HxsLexer *l = malloc(sizeof(HxsLexer));
+    HxsLexer *l = Hxs_Arena_alloc(arena, sizeof(HxsLexer));
     l->src = src;
-    l->arena = Hxs_Arena_create(1024 * 1024);
+    l->arena = arena;
     l->line = 1;
     l->pos = 0;
     l->linePos = 1;
     return l;
 }
 
-HxsToken *get_token(HxsLexer *lexer, bool advance)
+HxsToken *Hxs_get_token(HxsLexer *lexer, bool advance)
 {
     int saved_pos = lexer->pos;
     int saved_line = lexer->line;
@@ -413,7 +410,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
 #undef DOUBLE
 
     if (tok == NULL){
-        lexer_throw(lexer, "Unexpected Character %c", c);
+        Hxs_lexer_throw(lexer, "Unexpected Character %c", c);
     }
 
     if (!advance)
@@ -427,13 +424,7 @@ HxsToken *get_token(HxsLexer *lexer, bool advance)
     return tok;
 }
 
-void free_lexer(HxsLexer *lexer)
-{
-    Hxs_Arena_destroy(lexer->arena);
-    free(lexer);
-}
-
-void lexer_throw(HxsLexer *lexer, const char *fmt, ...)
+void Hxs_lexer_throw(HxsLexer *lexer, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

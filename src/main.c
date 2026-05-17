@@ -1,4 +1,3 @@
-#include "core/hxs_memory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer/hxs_lexer.h"
@@ -32,31 +31,29 @@ char *read_file(const char *path)
 
 int main(int argc, char const *argv[])
 {
-    Hxs_memoryInit(1024 * 1024);
     const char *source = (const char *)read_file("../test.hxs");
 
-    HxsLexer *lexer = make_lexer(source);
+    HxsArena* arena = Hxs_Arena_create(sizeof(HxsLexer) * 100);
+
+    HxsLexer *lexer = Hxs_make_lexer(arena, source);
     while (true)
     {
-        HxsToken *token = get_token(lexer, true);
+        HxsToken *token = Hxs_get_token(lexer, true);
 
         if (token->kind == EOF_TOKEN)
         {
             break;
         }
 
-        char *info = token_to_string(token);
+        char *info = Hxs_token_to_string(token);
 
         printf("%s\n", info);
 
         free(info);
     }
 
-    free_lexer(lexer);
-
+    Hxs_Arena_destroy(arena);
     free((void *)source);
-
-    Hxs_memoryShutdown();
 
     return 0;
 }
