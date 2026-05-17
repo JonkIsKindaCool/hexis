@@ -1,11 +1,9 @@
 #pragma once
 #include "hxs_lexer.h"
+#include "hxs_types.h"
+#include "hxs_data.h"
 
 typedef struct HxsExpr HxsExpr;
-typedef struct HxsFuncArg HxsFuncArg;
-typedef struct HxsAstType HxsAstType;
-typedef struct HxsAnonField HxsAnonField;
-typedef struct HxsObjField HxsObjField;
 typedef struct HxsPosition HxsPosition;
 
 typedef enum
@@ -172,13 +170,13 @@ struct HxsExpr
         } ObjectDeclaration;
         struct
         {
+            HxsExpr *target;
             size_t totalArgs;
             HxsExpr **args;
         } Call;
         struct
         {
             char *target;
-
             size_t totalArgs;
             HxsExpr **args;
         } New;
@@ -190,6 +188,7 @@ struct HxsExpr
         struct
         {
             HxsExpr *cond;
+            HxsExpr *value;
             HxsExpr *elsee;
         } If;
         struct
@@ -221,59 +220,32 @@ struct HxsExpr
     } data;
 };
 
-struct HxsFuncArg
-{
-    bool optional;
-    char *name;
-    HxsExpr *def;
-    HxsAstType *type;
-};
-struct HxsObjField
-{
-    char *name;
-    HxsExpr *value;
-    HxsAstType *type;
-};
+HxsExpr *Hxs_Expr_makeExpression(HxsExprKind kind, HxsPosition pos);
 
-struct HxsAstType
-{
-    HxsAstTypeKind type;
-    union
-    {
-        struct
-        {
-            char *name;
-            size_t genericsLength;
-            HxsAstType **generics;
-        } Basic;
+HxsExpr *Hxs_Expr_makeIntLiteral(HxsPosition pos, int64_t value);
+HxsExpr *Hxs_Expr_makeFloatLiteral(HxsPosition pos, double value);
+HxsExpr *Hxs_Expr_makeStringLiteral(HxsPosition pos, char *value);
+HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsPosition pos, bool value);
 
-        struct
-        {
-            size_t argsLength;
-            HxsAstType **argsLength;
-            HxsAstType *ret;
-        } Function;
+HxsExpr *Hxs_Expr_makeIdentifier(HxsPosition pos, char *id);
 
-        struct
-        {
-            size_t fieldsLength;
-            HxsAnonField **fields;
-        } Anon; 
-    } data;
-};
+HxsExpr *Hxs_Expr_makeField(HxsPosition pos, HxsExpr *parent, char *field);
+HxsExpr *Hxs_Expr_makeIndex(HxsPosition pos, HxsExpr *parent, HxsExpr *index);
 
-struct HxsAnonField
-{
-    bool optional;
-    char *name;
-    HxsAstType *type;
-};
+HxsExpr *Hxs_Expr_makeBinop(HxsPosition pos, HxsBinop binop, HxsExpr *left, HxsExpr *right);
+HxsExpr *Hxs_Expr_makeUnop(HxsPosition pos, HxsUnop unop, HxsExpr *value);
 
-struct HxsPosition
-{
-    const char *filename;
-    int line;
-    int column;
-    int pos;
-    int length;
-};
+HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsPosition pos, size_t size, HxsExpr **values);
+HxsExpr *Hxs_Expr_makeObjDeclaration(HxsPosition pos, size_t size, HxsObjField **values);
+
+HxsExpr *Hxs_Expr_makeCall(HxsPosition pos, HxsExpr *target, size_t size, HxsExpr **values);
+HxsExpr *Hxs_Expr_makeNew(HxsPosition pos, char *target, size_t size, HxsExpr **values);
+
+HxsExpr *Hxs_Expr_makeBlock(HxsPosition pos, size_t size, HxsExpr **body);
+HxsExpr *Hxs_Expr_makeIf(HxsPosition pos, HxsExpr *cond, HxsExpr *body, HxsExpr *elsee);
+HxsExpr *Hxs_Expr_makeTernary(HxsPosition pos, HxsExpr *cond, HxsExpr *onTrue, HxsExpr *onFalse);
+
+HxsExpr *Hxs_Expr_makeSwitch(HxsPosition pos, HxsExpr *target);
+HxsExpr *Hxs_Expr_makeFor(HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
+HxsExpr *Hxs_Expr_makeWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
+HxsExpr *Hxs_Expr_makeDoWhile(HxsPosition pos, HxsExpr *cond, HxsExpr *body);
