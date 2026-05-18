@@ -213,6 +213,15 @@ struct HxsExpr
             HxsExpr *cond;
             HxsExpr *body;
         } DoWhile;
+
+        struct
+        {
+            bool isConst;
+            char *name;
+            HxsAstType *type;
+            HxsExpr *value;
+        } VarDecl;
+        
     } data;
 };
 
@@ -245,3 +254,5 @@ HxsExpr *Hxs_Expr_makeSwitch(HxsArena* arena, HxsPosition pos, HxsExpr *target);
 HxsExpr *Hxs_Expr_makeFor(HxsArena* arena, HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
 HxsExpr *Hxs_Expr_makeDoWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body);
+
+HxsExpr *Hxs_Expr_makeVar(HxsArena* arena, HxsPosition pos, bool isConst, char *name, HxsAstType *type, HxsExpr *value);

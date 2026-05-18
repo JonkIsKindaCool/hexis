@@ -1,6 +1,6 @@
 #include "ast/hxs_ast.h"
 
-HxsExpr *Hxs_Expr_makeExpression(HxsArena* arena, HxsExprKind kind, HxsPosition pos)
+HxsExpr *Hxs_Expr_makeExpression(HxsArena *arena, HxsExprKind kind, HxsPosition pos)
 {
     HxsExpr *expr = Hxs_Arena_alloc(arena, sizeof(HxsExpr));
     expr->kind = kind;
@@ -9,7 +9,7 @@ HxsExpr *Hxs_Expr_makeExpression(HxsArena* arena, HxsExprKind kind, HxsPosition 
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeIntLiteral(HxsArena* arena, HxsPosition pos, int64_t value)
+HxsExpr *Hxs_Expr_makeIntLiteral(HxsArena *arena, HxsPosition pos, int64_t value)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_CONST_INT, pos);
     expr->data.ConstInt.value = value;
@@ -17,7 +17,7 @@ HxsExpr *Hxs_Expr_makeIntLiteral(HxsArena* arena, HxsPosition pos, int64_t value
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeFloatLiteral(HxsArena* arena, HxsPosition pos, double value)
+HxsExpr *Hxs_Expr_makeFloatLiteral(HxsArena *arena, HxsPosition pos, double value)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_CONST_FLOAT, pos);
     expr->data.ConstFloat.value = value;
@@ -25,7 +25,7 @@ HxsExpr *Hxs_Expr_makeFloatLiteral(HxsArena* arena, HxsPosition pos, double valu
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeStringLiteral(HxsArena* arena, HxsPosition pos, char *value)
+HxsExpr *Hxs_Expr_makeStringLiteral(HxsArena *arena, HxsPosition pos, char *value)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_CONST_STRING, pos);
     size_t len = strlen(value) + 1;
@@ -34,7 +34,7 @@ HxsExpr *Hxs_Expr_makeStringLiteral(HxsArena* arena, HxsPosition pos, char *valu
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsArena* arena, HxsPosition pos, bool value)
+HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsArena *arena, HxsPosition pos, bool value)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_CONST_BOOL, pos);
     expr->data.ConstBool.value = value;
@@ -42,7 +42,7 @@ HxsExpr *Hxs_Expr_makeBooleanLiteral(HxsArena* arena, HxsPosition pos, bool valu
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeIdentifier(HxsArena* arena, HxsPosition pos, char *id)
+HxsExpr *Hxs_Expr_makeIdentifier(HxsArena *arena, HxsPosition pos, char *id)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_IDENT, pos);
     size_t len = strlen(id) + 1;
@@ -51,7 +51,7 @@ HxsExpr *Hxs_Expr_makeIdentifier(HxsArena* arena, HxsPosition pos, char *id)
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeField(HxsArena* arena, HxsPosition pos, HxsExpr *parent, char *field)
+HxsExpr *Hxs_Expr_makeField(HxsArena *arena, HxsPosition pos, HxsExpr *parent, char *field)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_FIELD, pos);
     expr->data.Field.obj = parent;
@@ -61,7 +61,7 @@ HxsExpr *Hxs_Expr_makeField(HxsArena* arena, HxsPosition pos, HxsExpr *parent, c
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeIndex(HxsArena* arena, HxsPosition pos, HxsExpr *parent, HxsExpr *index)
+HxsExpr *Hxs_Expr_makeIndex(HxsArena *arena, HxsPosition pos, HxsExpr *parent, HxsExpr *index)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_INDEX_ACCESS, pos);
     expr->data.Index.obj = parent;
@@ -70,7 +70,7 @@ HxsExpr *Hxs_Expr_makeIndex(HxsArena* arena, HxsPosition pos, HxsExpr *parent, H
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeBinop(HxsArena* arena, HxsPosition pos, HxsBinop binop, HxsExpr *left, HxsExpr *right)
+HxsExpr *Hxs_Expr_makeBinop(HxsArena *arena, HxsPosition pos, HxsBinop binop, HxsExpr *left, HxsExpr *right)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_BINOP, pos);
     expr->data.Binop.op = binop;
@@ -80,7 +80,7 @@ HxsExpr *Hxs_Expr_makeBinop(HxsArena* arena, HxsPosition pos, HxsBinop binop, Hx
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeUnop(HxsArena* arena, HxsPosition pos, HxsUnop unop, HxsExpr *value)
+HxsExpr *Hxs_Expr_makeUnop(HxsArena *arena, HxsPosition pos, HxsUnop unop, HxsExpr *value)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_UNOP, pos);
     expr->data.Unop.op = unop;
@@ -89,7 +89,7 @@ HxsExpr *Hxs_Expr_makeUnop(HxsArena* arena, HxsPosition pos, HxsUnop unop, HxsEx
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsArena* arena, HxsPosition pos, size_t size, HxsExpr **values)
+HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsArena *arena, HxsPosition pos, size_t size, HxsExpr **values)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_ARRAY_DECL, pos);
     expr->data.ArrayDeclaration.size = size;
@@ -98,7 +98,7 @@ HxsExpr *Hxs_Expr_makeArrayDeclaration(HxsArena* arena, HxsPosition pos, size_t 
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeObjDeclaration(HxsArena* arena, HxsPosition pos, size_t size, HxsObjField **values)
+HxsExpr *Hxs_Expr_makeObjDeclaration(HxsArena *arena, HxsPosition pos, size_t size, HxsObjField **values)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_OBJECT_DECL, pos);
     expr->data.ObjectDeclaration.size = size;
@@ -107,7 +107,7 @@ HxsExpr *Hxs_Expr_makeObjDeclaration(HxsArena* arena, HxsPosition pos, size_t si
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeCall(HxsArena* arena, HxsPosition pos, HxsExpr *target, size_t size, HxsExpr **values)
+HxsExpr *Hxs_Expr_makeCall(HxsArena *arena, HxsPosition pos, HxsExpr *target, size_t size, HxsExpr **values)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_CALL, pos);
     expr->data.Call.target = target;
@@ -117,7 +117,7 @@ HxsExpr *Hxs_Expr_makeCall(HxsArena* arena, HxsPosition pos, HxsExpr *target, si
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeNew(HxsArena* arena, HxsPosition pos, char *target, size_t size, HxsExpr **values)
+HxsExpr *Hxs_Expr_makeNew(HxsArena *arena, HxsPosition pos, char *target, size_t size, HxsExpr **values)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_NEW, pos);
     expr->data.New.target = target;
@@ -127,7 +127,7 @@ HxsExpr *Hxs_Expr_makeNew(HxsArena* arena, HxsPosition pos, char *target, size_t
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeBlock(HxsArena* arena, HxsPosition pos, size_t size, HxsExpr **body)
+HxsExpr *Hxs_Expr_makeBlock(HxsArena *arena, HxsPosition pos, size_t size, HxsExpr **body)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_BLOCK, pos);
     expr->data.Block.size = size;
@@ -136,7 +136,7 @@ HxsExpr *Hxs_Expr_makeBlock(HxsArena* arena, HxsPosition pos, size_t size, HxsEx
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeIf(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body, HxsExpr *elsee)
+HxsExpr *Hxs_Expr_makeIf(HxsArena *arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body, HxsExpr *elsee)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_IF, pos);
     expr->data.If.cond = cond;
@@ -146,7 +146,7 @@ HxsExpr *Hxs_Expr_makeIf(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExp
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeTernary(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *onTrue, HxsExpr *onFalse)
+HxsExpr *Hxs_Expr_makeTernary(HxsArena *arena, HxsPosition pos, HxsExpr *cond, HxsExpr *onTrue, HxsExpr *onFalse)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_TERNARY, pos);
     expr->data.Ternary.cond = cond;
@@ -156,7 +156,7 @@ HxsExpr *Hxs_Expr_makeTernary(HxsArena* arena, HxsPosition pos, HxsExpr *cond, H
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeSwitch(HxsArena* arena, HxsPosition pos, HxsExpr *target)
+HxsExpr *Hxs_Expr_makeSwitch(HxsArena *arena, HxsPosition pos, HxsExpr *target)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_SWITCH, pos);
     expr->data.Switch.target = target;
@@ -164,7 +164,7 @@ HxsExpr *Hxs_Expr_makeSwitch(HxsArena* arena, HxsPosition pos, HxsExpr *target)
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeFor(HxsArena* arena, HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body)
+HxsExpr *Hxs_Expr_makeFor(HxsArena *arena, HxsPosition pos, char *variable, HxsExpr *target, HxsExpr *body)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_FOR, pos);
     size_t len = strlen(variable) + 1;
@@ -175,7 +175,7 @@ HxsExpr *Hxs_Expr_makeFor(HxsArena* arena, HxsPosition pos, char *variable, HxsE
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body)
+HxsExpr *Hxs_Expr_makeWhile(HxsArena *arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_WHILE, pos);
     expr->data.While.cond = cond;
@@ -184,11 +184,22 @@ HxsExpr *Hxs_Expr_makeWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, Hxs
     return expr;
 }
 
-HxsExpr *Hxs_Expr_makeDoWhile(HxsArena* arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body)
+HxsExpr *Hxs_Expr_makeDoWhile(HxsArena *arena, HxsPosition pos, HxsExpr *cond, HxsExpr *body)
 {
     HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_DO_WHILE, pos);
     expr->data.DoWhile.cond = cond;
     expr->data.DoWhile.body = body;
+
+    return expr;
+}
+
+HxsExpr *Hxs_Expr_makeVar(HxsArena *arena, HxsPosition pos, bool isConst, char *name, HxsAstType *type, HxsExpr *value){
+    HxsExpr *expr = Hxs_Expr_makeExpression(arena, HXS_EXPR_VAR_DECL, pos);
+
+    expr->data.VarDecl.isConst = isConst;
+    expr->data.VarDecl.name = name;
+    expr->data.VarDecl.type = type;
+    expr->data.VarDecl.value = value;
 
     return expr;
 }

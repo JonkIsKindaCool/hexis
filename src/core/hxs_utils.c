@@ -802,7 +802,26 @@ static void Hxs_printExprInternal(const HxsExpr *expr, int indent)
         print_indent(sub);
         printf("}\n");
         break;
+    case HXS_EXPR_VAR_DECL:
+        printf("{\n");
+        print_indent(INDENT_NEXT(sub));
+        printf("\"name\": %s,\n", expr->data.VarDecl.name);
+        print_indent(INDENT_NEXT(sub));
+        printf("\"isConst\": %s,\n", expr->data.VarDecl.isConst ? "true" : "false");
+        if (expr->data.VarDecl.value != NULL)
+        {
+            print_indent(INDENT_NEXT(sub));
+            printf("\"value\":\n");
+            print_indent(INDENT_NEXT(sub));
 
+            Hxs_printExprInternal(
+                expr->data.VarDecl.value,
+                INDENT_NEXT(sub));
+            printf("\n");
+        }
+        print_indent(sub);
+        printf("}\n");
+        break;
     default:
         printf("{}\n");
         break;

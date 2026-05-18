@@ -86,6 +86,12 @@ static void expect(HxsParser *p, HxsTokenKind kind)
         parser_error(p, "expected %s, got %s", token_kind_name(kind), token_kind_name(p->current->kind));
 }
 
+static void expect_op(HxsParser *p, HxsOpKind kind)
+{
+    if (p->current->kind != OP_TOKEN || p->current->value.op != kind)
+        parser_error(p, "expected %s, got %s", token_kind_name(kind), token_kind_name(p->current->kind));
+}
+
 static bool match(HxsParser *p, HxsTokenKind kind)
 {
     if (p->current->kind == kind)
@@ -177,18 +183,21 @@ static HxsUnop token_to_unop(HxsToken *tok)
     }
 }
 
+static HxsExpr *parse_top_level(HxsParser *p);
 static HxsExpr *parse_expression(HxsParser *p, int min_precedence);
 static HxsExpr *parse_primary(HxsParser *p);
+
+static HxsAstType *parse_type(HxsParser *p);
 
 static HxsExpr *parse_binary(HxsParser *p, HxsExpr *left, int min_precedence)
 {
     HxsBinop op = token_to_binop(p->current);
     int prec = get_precedence(op);
     advance(p);
-    
+
     int next_min_precedence = (prec == 2) ? prec : prec + 1;
     HxsExpr *right = parse_expression(p, next_min_precedence);
-    
+
     return Hxs_Expr_makeBinop(p->arena, left->pos, op, left, right);
 }
 
@@ -199,6 +208,77 @@ static HxsExpr *parse_unary(HxsParser *p)
     advance(p);
     HxsExpr *operand = parse_expression(p, 14);
     return Hxs_Expr_makeUnop(p->arena, pos, op, operand);
+}
+
+static HxsExpr *parse_top_level(HxsParser *p)
+{
+    HxsPosition pos = {.line = p->current->line, .column = p->current->start};
+    HxsExpr *expr = NULL;
+
+    switch (p->current->kind)
+    {
+    case CONST_TOKEN:
+    case VAR_TOKEN:
+    {
+        bool isConst = p->current->kind == CONST_TOKEN;
+
+        advance(p);
+
+        expect(p, IDENTIFIER_TOKEN);
+
+        char *name = p->current->value.str_val;
+
+        advance(p);
+
+        HxsAstType *type = NULL;
+        HxsExpr *value = NULL;
+
+        if (p->current->kind == COLON_TOKEN)
+        {
+            advance(p);
+            type = parse_type(p);
+        }
+
+        if (isConst)
+        {
+            expect_op(p, HXS_OP_ASSIGN);
+            advance(p);
+
+            value = parse_expression(p, 0);
+        }
+        else
+        {
+            if (p->current->kind == OP_TOKEN &&
+                p->current->value.op == HXS_OP_ASSIGN)
+            {
+                advance(p);
+
+                value = parse_expression(p, 0);
+            }
+            else
+            {
+                if (type == NULL)
+                {
+                    parser_error(p,
+                                 "expected initializer or type annotation");
+                }
+            }
+        }
+
+        return Hxs_Expr_makeVar(
+            p->arena,
+            pos,
+            isConst,
+            name,
+            type,
+            value);
+    }
+    default:
+        expr = parse_expression(p, 0);
+        break;
+    }
+
+    return expr;
 }
 
 static HxsExpr *parse_primary(HxsParser *p)
@@ -275,7 +355,7 @@ static HxsExpr *parse_primary(HxsParser *p)
                 size_t old_cap = cap;
                 cap *= 2;
                 HxsObjField **new_fields = Hxs_Arena_alloc(p->arena, cap * sizeof(HxsObjField *));
-                memcpy(new_fields, fields, old_cap * sizeof(HxsObjField *)); 
+                memcpy(new_fields, fields, old_cap * sizeof(HxsObjField *));
                 fields = new_fields;
             }
             expect(p, IDENTIFIER_TOKEN);
@@ -324,6 +404,24 @@ static HxsExpr *parse_expression(HxsParser *p, int min_precedence)
     return left;
 }
 
+static HxsAstType *parse_type(HxsParser *p)
+{
+    HxsAstType *type = Hxs_Type_makeType(p->arena, HXS_BASIC_TYPE);
+
+    expect(p, IDENTIFIER_TOKEN);
+    advance(p);
+
+    return type;
+}
+
+static bool expr_requires_semicolon(HxsExpr *expr)
+{
+    if (!expr)
+        return true;
+
+    return true;
+}
+
 HxsExpr *Hxs_Parser_parse_program(HxsParser *p)
 {
     if (setjmp(p->error_jmp) != 0)
@@ -341,11 +439,16 @@ HxsExpr *Hxs_Parser_parse_program(HxsParser *p)
             memcpy(new_body, body, old_cap * sizeof(HxsExpr *));
             body = new_body;
         }
-        body[count++] = parse_expression(p, 0);
+
+        HxsExpr *expr = parse_top_level(p);
+        body[count++] = expr;
+
         if (match(p, SEMICOLON_TOKEN))
             continue;
-        if (p->current->kind == EOF_TOKEN)
-            break;
+
+        if (!expr_requires_semicolon(expr) || p->current->kind == EOF_TOKEN)
+            continue;
+
         parser_error(p, "expected ';' after expression, got %s at line %d col %d",
                      token_kind_name(p->current->kind),
                      (int)p->current->line, (int)p->current->start);
@@ -360,10 +463,10 @@ HxsParser *Hxs_Parser_new(HxsArena *arena, HxsLexer *lexer, const char *filename
     p->arena = arena;
     p->lexer = lexer;
     p->filename = filename ? filename : "<unknown>";
-    
+
     p->current = Hxs_get_token(lexer, true);
     p->peek = Hxs_get_token(lexer, true);
-    
+
     p->has_error = false;
     return p;
 }
